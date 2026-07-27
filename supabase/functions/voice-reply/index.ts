@@ -22,10 +22,10 @@ const CORS = {
 };
 
 const TERMINAL = new Set(["reply_sms", "escalate", "stay_silent"]);
-const REPLY_CATEGORIES = ["menu_list", "ad_pricing", "identity", "sms_help", "greeting_ack", "group_info"];
+const REPLY_CATEGORIES = ["menu_list", "ad_pricing", "identity", "sms_help", "greeting_ack", "group_info", "general_help"];
 const CANON_FIELD: Record<string, string | null> = {
   menu_list: "menu_text", ad_pricing: "ad_price_text",
-  identity: "identity_text", sms_help: "sms_help_text", greeting_ack: null, group_info: null,
+  identity: "identity_text", sms_help: "sms_help_text", greeting_ack: null, group_info: null, general_help: null,
 };
 // group_info answers must be backed by one of these data tools used THIS turn (no fabrication).
 const DATA_TOOLS = ["run_sql", "search_messages", "get_context", "find_group", "member_lookup", "leaderboard"];
@@ -139,6 +139,15 @@ const VOICE_TOOLS = [{
       },
     },
     {
+      name: "web_search",
+      description: "Search the web for a real-time or general fact you do not already know - a sports score, current event, a definition, or a translation/language you are unsure of. Returns a short grounded answer of what the web says. Use for 'random'/general questions a quick search answers, then reply from the result.",
+      parameters: {
+        type: "object",
+        properties: { query: { type: "string", description: "the web search query" } },
+        required: ["query"],
+      },
+    },
+    {
       name: "reply_sms",
       description: "TERMINAL: send an auto-reply SMS. Only for clear, mechanical questions squarely in one whitelisted category, with facts from CANON or tool results.",
       parameters: {
@@ -210,6 +219,23 @@ these categories AND you are highly confident:
                   answer with that exact fact - never guess. If the tools do not
                   clearly answer it, escalate. Never reveal one person's private
                   info (their number, their messages) to someone else.
+                  RELAYING MESSAGE CONTENT: if the answer would repeat the TEXT of
+                  a post/message, first READ it and judge whether it is okay to
+                  share with an outside texter. Relay ONLY clearly public,
+                  non-sensitive content (e.g. a public News/Headlines post). If
+                  the group is private/admin/internal (e.g. "Tech Admins", "SK
+                  Tech Admins"), or the content is personal, sensitive, internal,
+                  or clearly not meant for outsiders, do NOT relay it - escalate.
+  - general_help: a simple GENERAL question, not about SK News accounts or the
+                  user's personal situation - translate a phrase, identify a
+                  language, a basic how-to (e.g. turning on phone/GroupMe
+                  notifications), a definition, or a fact a quick search answers
+                  (a score, a current event). For anything time-sensitive or you
+                  are unsure of, call web_search FIRST and answer from its result;
+                  for stable facts/translations you are confident about, answer
+                  directly. Keep it short. If you still can't answer confidently,
+                  escalate. Do NOT use this to give advice on money, health, or
+                  legal matters, or anything sensitive - escalate those.
 If it is not squarely one of these, do NOT use reply_sms.
 
 CALL escalate for EVERYTHING ELSE, specifically including: any question you
@@ -238,7 +264,9 @@ factual questions about the groups (member counts, activity, whether something
 posted, stats, top members) under group_info - that is exactly what these tools
 are for. Answer when a tool gives you a clear, specific fact; escalate only when
 the tools do not resolve it or the question needs human judgment (opinions,
-decisions, money, complaints, or anyone's private details).
+decisions, money, complaints, or anyone's private details). Use web_search for
+general/random questions and real-time facts (scores, current events, a
+translation you are unsure of) under general_help - answer from what it returns.
 
 WHEN YOU DO REPLY: concise, warm, plain SMS — no markdown, no bullets. Put each
 separate text bubble in its own entry of reply_sms.parts (max 4). Do not add a
@@ -308,6 +336,35 @@ async function runVoiceTool(supabase: any, callerPhone: string, name: string, ar
     if (!gid) return { error: "group_id required - call find_group first to get one" };
     const { group_id: _gid, ...rest } = args;
     return runTool(supabase, gid, name, rest, false);
+  }
+  if (name === "web_search") {
+    const query = String(args.query ?? "").trim();
+    if (!query) return { error: "query required" };
+    try {
+      const models = (Deno.env.get("WEB_SEARCH_MODELS") ?? "gemini-2.0-flash,gemini-flash-latest,gemini-2.5-flash-lite")
+        .split(",").map((m) => m.trim()).filter(Boolean);
+      let lastStatus = 0;
+      for (const model of models) {
+        const r = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${Deno.env.get("GEMINI_API_KEY")}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: query }] }], tools: [{ google_search: {} }] }),
+          },
+        );
+        lastStatus = r.status;
+        if (r.status === 429 || r.status === 404) continue; // model out of quota / gone -> try next
+        if (!r.ok) return { error: `web search unavailable (HTTP ${r.status})` };
+        const d = await r.json();
+        const text = (d?.candidates?.[0]?.content?.parts ?? [])
+          .filter((p: any) => p.text).map((p: any) => p.text).join("").trim();
+        if (text) return { result: text };
+      }
+      return { error: `web search unavailable (HTTP ${lastStatus}) - likely rate-limited; escalate` };
+    } catch (e) {
+      return { error: `web search failed: ${String(e).slice(0, 120)}` };
+    }
   }
   throw new Error(`unknown tool ${name}`);
 }
