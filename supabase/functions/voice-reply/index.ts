@@ -140,7 +140,7 @@ const VOICE_TOOLS = [{
     },
     {
       name: "web_search",
-      description: "Search the web for a real-time or general fact you do not already know - a sports score, current event, a definition, or a translation/language you are unsure of. Returns a short grounded answer of what the web says. Use for 'random'/general questions a quick search answers, then reply from the result.",
+      description: "Look up a recent or general fact you are unsure of - a sports result, a current-ish event, a definition. Returns a short factual answer, or nothing if it is not known or needs truly-live data (then escalate). Use for 'random'/general questions, then reply from the result.",
       parameters: {
         type: "object",
         properties: { query: { type: "string", description: "the web search query" } },
@@ -341,27 +341,34 @@ async function runVoiceTool(supabase: any, callerPhone: string, name: string, ar
     const query = String(args.query ?? "").trim();
     if (!query) return { error: "query required" };
     try {
-      const models = (Deno.env.get("WEB_SEARCH_MODELS") ?? "gemini-3.6-flash,gemini-3.5-flash,gemini-3.1-flash-lite,gemini-3-flash-preview")
+      // Google Search grounding is billing-gated on this key (returns 429), so answer from a
+      // current model's built-in knowledge. Good for recent/general facts (it knows e.g. the
+      // 2024 World Series), returns UNKNOWN for truly-live/in-progress data. To enable REAL
+      // web grounding, set WEB_SEARCH_GROUNDED=1 (needs a billing-enabled Gemini key).
+      const grounded = Deno.env.get("WEB_SEARCH_GROUNDED") === "1";
+      const models = (Deno.env.get("WEB_SEARCH_MODELS") ?? "gemini-3.1-flash-lite,gemini-3.6-flash,gemini-3.5-flash")
         .split(",").map((m) => m.trim()).filter(Boolean);
+      const prompt = grounded ? query :
+        "Answer this question factually, accurately, and in one or two short sentences for an SMS. " +
+        "If you do not know, or it needs real-time / live / in-progress data you cannot be sure of, reply with exactly: UNKNOWN\n\nQuestion: " + query;
       let lastStatus = 0;
       for (const model of models) {
+        const body: any = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+        if (grounded) body.tools = [{ google_search: {} }];
         const r = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${Deno.env.get("GEMINI_API_KEY")}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: query }] }], tools: [{ google_search: {} }] }),
-          },
+          { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) },
         );
         lastStatus = r.status;
-        if (r.status === 429 || r.status === 404) continue; // model out of quota / gone -> try next
-        if (!r.ok) return { error: `web search unavailable (HTTP ${r.status})` };
+        if (r.status === 429 || r.status === 404) continue; // out of quota / gone -> try next model
+        if (!r.ok) return { error: `lookup unavailable (HTTP ${r.status})` };
         const d = await r.json();
         const text = (d?.candidates?.[0]?.content?.parts ?? [])
           .filter((p: any) => p.text).map((p: any) => p.text).join("").trim();
-        if (text) return { result: text };
+        if (!text || /^\s*unknown/i.test(text)) return { error: "not known - escalate this one" };
+        return { result: text };
       }
-      return { error: `web search unavailable (HTTP ${lastStatus}) - likely rate-limited; escalate` };
+      return { error: `lookup unavailable (HTTP ${lastStatus}) - escalate` };
     } catch (e) {
       return { error: `web search failed: ${String(e).slice(0, 120)}` };
     }
