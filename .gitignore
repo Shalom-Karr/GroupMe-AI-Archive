@@ -1,0 +1,11 @@
+.env
+token.txt
+node_modules/
+.playwright-mcp/
+groupme_*_messages.json
+groupme_*_messages.partial.json
+*.png
+tw.out.css
+supabase/.temp/
+supabase/.branches/
+__pycache__/

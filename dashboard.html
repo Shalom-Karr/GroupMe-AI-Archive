@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<!--
+  GroupMe Archive
+  Copyright (c) 2026 Shalom Karr
+  Source-available under AGPL-3.0 WITH the Commons Clause: no commercial or paid
+  use without permission, and derivatives must remain open under the same terms.
+  See the LICENSE file for full terms.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GroupMe Archive — 104645947</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: { extend: {
+    fontFamily: {
+      display: ['"Bricolage Grotesque"', 'sans-serif'],
+      body: ['"Instrument Sans"', 'sans-serif'],
+    },
+  } }
+}
+</script>
+<style>
+  html { overflow-anchor: none; }
+  body {
+    font-family: "Instrument Sans", sans-serif;
+    background:
+      radial-gradient(1100px 500px at 85% -10%, rgba(251,191,36,.07), transparent 60%),
+      radial-gradient(900px 600px at -10% 0%, rgba(99,102,241,.09), transparent 55%),
+      #0f172a;
+    background-attachment: fixed;
+  }
+  body::after {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 50; opacity: .035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  ::-webkit-scrollbar { width: 10px; }
+  ::-webkit-scrollbar-track { background: #0f172a; }
+  ::-webkit-scrollbar-thumb { background: #334155; border-radius: 5px; }
+  ::-webkit-scrollbar-thumb:hover { background: #475569; }
+  ::selection { background: rgba(251,191,36,.3); }
+  input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.65) sepia(.4) saturate(3) hue-rotate(-10deg); cursor: pointer; }
+  .highlight-jump { animation: flashJump 2.4s ease-out; border-radius: .75rem; }
+  @keyframes flashJump {
+    0% { background: rgba(251,191,36,.28); box-shadow: 0 0 0 1px rgba(251,191,36,.5); }
+    100% { background: transparent; box-shadow: none; }
+  }
+  mark { background: rgba(251,191,36,.32); color: #fde68a; border-radius: 3px; padding: 0 2px; }
+  #dateFloat { transition: opacity .3s, transform .3s; }
+  #dateFloat.hiddenFloat { opacity: 0; transform: translate(-50%, -8px); pointer-events: none; }
+  #toLatest { transition: opacity .25s, transform .25s; }
+  #toLatest.hiddenFloat { opacity: 0; transform: translateY(10px); pointer-events: none; }
+  .chip { transition: all .15s; }
+  .chip:hover { border-color: rgba(251,191,36,.6); color: #fbbf24; transform: translateY(-1px); }
+  .railMonth { transition: all .15s; }
+  .railMonth:hover { color: #fbbf24; transform: translateX(-3px); }
+  .msgimg { transition: filter .2s; }
+  .msgimg:hover { filter: brightness(1.12); }
+  .ctxBtn { opacity: 0; transition: opacity .15s; }
+  div:hover > div > div > .ctxBtn, .ctxBtn:focus { opacity: 1; }
+</style>
+</head>
+<body class="text-slate-200">
+
+<header class="sticky top-0 z-30 backdrop-blur-md bg-[#0f172acc] border-b border-slate-800">
+  <div class="max-w-3xl mx-auto px-4 py-3 lg:pr-40">
+    <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+      <div class="min-w-0">
+        <h1 class="font-display font-bold text-xl tracking-tight text-white leading-none">
+          The <span class="text-amber-400">Archive</span>
+        </h1>
+        <p id="stats" class="text-[11px] text-slate-500 mt-1 font-medium tracking-wide">loading history…</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <input type="date" id="datePicker"
+          class="bg-[#1e293b] border border-slate-700 rounded-xl px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-amber-400/60 focus:ring-2 focus:ring-amber-400/10">
+        <button onclick="jumpToDate()"
+          class="bg-amber-400 hover:bg-amber-300 text-[#0f172a] text-sm font-semibold px-4 py-1.5 rounded-xl shadow-[0_0_18px_rgba(251,191,36,.25)]">
+          Jump
+        </button>
+      </div>
+    </div>
+    <div class="flex flex-wrap items-center gap-2 mt-2.5">
+      <div class="relative flex-1 min-w-[200px]">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="m20 20-3.5-3.5"/></svg>
+        <input id="searchBox" type="text" placeholder="search messages…" autocomplete="off"
+          class="w-full bg-[#1e293b] border border-slate-700 rounded-xl pl-9 pr-8 py-1.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-400/60 focus:ring-2 focus:ring-amber-400/10">
+        <button id="clearSearch" onclick="clearFilters()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-amber-300 text-sm font-bold">×</button>
+      </div>
+      <div class="relative" id="memberWrap">
+        <div id="memberBox" onclick="document.getElementById('memberSearch').focus()"
+          class="flex flex-wrap items-center gap-1 bg-[#1e293b] border border-slate-700 rounded-xl px-2 py-1 min-w-[230px] max-w-[360px] cursor-text focus-within:border-amber-400/60 focus-within:ring-2 focus-within:ring-amber-400/10">
+          <input id="memberSearch" type="text" placeholder="filter members…" autocomplete="off"
+            class="flex-1 min-w-[90px] bg-transparent text-sm text-slate-200 placeholder-slate-600 focus:outline-none py-0.5 px-1">
+        </div>
+        <div id="memberDrop" class="hidden absolute right-0 top-full mt-1.5 w-72 max-h-64 overflow-y-auto bg-[#1e293b] border border-slate-700 rounded-xl shadow-2xl z-40 py-1"></div>
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-1.5 mt-2.5">
+      <button onclick="jumpToTs(new Date('2024-12-20T00:00:00').getTime()/1000)" class="chip text-[11px] font-semibold text-amber-300/90 bg-[#1e293b] border border-amber-400/40 rounded-full px-3 py-1">★ First Day Active</button>
+      <button onclick="jumpYearsBack(2)"   class="chip text-[11px] font-medium text-slate-400 bg-[#1e293b] border border-slate-700 rounded-full px-3 py-1">↩ 2 years</button>
+      <button onclick="jumpYearsBack(1.5)" class="chip text-[11px] font-medium text-slate-400 bg-[#1e293b] border border-slate-700 rounded-full px-3 py-1">18 months</button>
+      <button onclick="jumpYearsBack(1)"   class="chip text-[11px] font-medium text-slate-400 bg-[#1e293b] border border-slate-700 rounded-full px-3 py-1">1 year</button>
+      <button onclick="jumpYearsBack(.5)"  class="chip text-[11px] font-medium text-slate-400 bg-[#1e293b] border border-slate-700 rounded-full px-3 py-1">6 months</button>
+      <button onclick="jumpToIndex(0)"     class="chip text-[11px] font-medium text-slate-400 bg-[#1e293b] border border-slate-700 rounded-full px-3 py-1">⇤ Oldest</button>
+      <button onclick="jumpToIndex(-1)"    class="chip text-[11px] font-medium text-slate-400 bg-[#1e293b] border border-slate-700 rounded-full px-3 py-1">Latest ⇥</button>
+      <button onclick="openLeaderboard()"  class="chip text-[11px] font-semibold text-amber-300/90 bg-[#1e293b] border border-amber-400/40 rounded-full px-3 py-1">🏆 Leaderboard</button>
+    </div>
+  </div>
+</header>
+
+<div id="dateFloat" class="hiddenFloat fixed left-1/2 -translate-x-1/2 top-[10.5rem] z-40 font-display text-xs font-semibold text-amber-300 bg-[#1e293bee] border border-amber-400/25 rounded-full px-4 py-1.5 shadow-xl backdrop-blur"></div>
+
+<nav id="rail" class="hidden lg:block fixed right-5 top-40 bottom-8 z-20 w-28 overflow-y-auto text-right pr-1" style="scrollbar-width:none"></nav>
+
+<div id="loader" class="max-w-3xl mx-auto px-4 py-20 text-center">
+  <div class="font-display text-2xl font-bold text-slate-600 mb-2 animate-pulse">⌛</div>
+  <p class="text-slate-400 mb-4 text-sm">reading <span class="font-mono text-amber-400/80" id="loaderFile">groupme_104645947_messages.json</span></p>
+  <div id="filePickerWrap" class="hidden">
+    <p class="text-slate-400 mb-3 text-sm">Couldn't auto-load the JSON (file:// blocks fetch). Pick it manually:</p>
+    <input type="file" id="filePicker" accept=".json" class="text-sm text-slate-300 file:mr-3 file:px-4 file:py-2 file:rounded-xl file:border-0 file:bg-amber-400 file:text-[#0f172a] file:font-semibold file:cursor-pointer">
+    <p class="text-slate-600 text-xs mt-5">or serve the folder: <code class="bg-[#1e293b] px-2 py-0.5 rounded">python -m http.server 8080</code></p>
+  </div>
+</div>
+
+<main class="max-w-3xl mx-auto px-4 pb-28 lg:pr-40">
+  <div id="topSentinel" class="h-1"></div>
+  <button id="loadOlderBtn" onclick="extendUp()" class="hidden w-full text-xs font-medium text-slate-500 hover:text-amber-300 bg-[#1e293b] border border-slate-800 rounded-xl py-2.5 mb-4">↑ load older</button>
+  <div id="messages"></div>
+  <button id="loadNewerBtn" onclick="extendDown()" class="hidden w-full text-xs font-medium text-slate-500 hover:text-amber-300 bg-[#1e293b] border border-slate-800 rounded-xl py-2.5 mt-4">↓ load newer</button>
+  <div id="bottomSentinel" class="h-1"></div>
+</main>
+
+<button id="toLatest" onclick="jumpToIndex(-1)" class="hiddenFloat fixed bottom-6 right-6 lg:right-40 z-30 w-11 h-11 rounded-full bg-amber-400 text-[#0f172a] text-lg font-bold shadow-[0_4px_24px_rgba(251,191,36,.35)] hover:bg-amber-300">↓</button>
+
+<div id="profileOverlay" class="hidden fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm overflow-y-auto" onclick="if(event.target===this)closeProfile()">
+  <div id="profileCard" class="max-w-md mx-auto mt-14 mb-10 bg-[#1e293b] border border-slate-700 rounded-2xl shadow-2xl"></div>
+</div>
+
+<script>
+const CHUNK = 200;
+const JSON_FILE = 'groupme_104645947_messages.json';
+let msgs = [];
+let view = [];
+let allView = [];
+let idToIdx = {};
+let memberNo = {};
+let winStart = 0, winEnd = 0;
+let suppressObservers = true;
+let searchTerm = '';
+let filterActive = false;
+let members = [];
+let selectedUids = new Set();
+let memberNames = {};
+let dropList = [];
+let dropIdx = 0;
+let baseStats = '';
+let colorCache = {};
+let floatTimer = null, searchTimer = null;
+
+const NAME_HUES = [28, 350, 168, 262, 200, 90, 320, 12, 140, 230];
+function nameColor(name) {
+  if (!colorCache[name]) {
+    let h = 0;
+    for (const c of name) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+    colorCache[name] = `hsl(${NAME_HUES[h % NAME_HUES.length]} 75% 68%)`;
+  }
+  return colorCache[name];
+}
+
+async function boot() {
+  try {
+    const r = await fetch(JSON_FILE);
+    if (!r.ok) throw new Error(r.status);
+    init(await r.json());
+  } catch (e) {
+    document.getElementById('filePickerWrap').classList.remove('hidden');
+    document.getElementById('filePicker').addEventListener('change', ev => {
+      const f = ev.target.files[0];
+      if (!f) return;
+      document.getElementById('loaderFile').textContent = f.name;
+      const rd = new FileReader();
+      rd.onload = () => init(JSON.parse(rd.result));
+      rd.readAsText(f);
+    });
+  }
+}
+
+function init(data) {
+  msgs = data.sort((a, b) => a.created_at - b.created_at);
+  allView = msgs.map((_, i) => i);
+  view = allView;
+  msgs.forEach((m, i) => { idToIdx[m.id] = i; });
+  buildMemberNumbers();
+  document.getElementById('loader').classList.add('hidden');
+  const oldest = new Date(msgs[0].created_at * 1000);
+  const newest = new Date(msgs[msgs.length - 1].created_at * 1000);
+  const days = Math.round((newest - oldest) / 86400000);
+  baseStats = `${msgs.length.toLocaleString()} messages over ${days.toLocaleString()} days · ${fmtDate(oldest)} → ${fmtDate(newest)}`;
+  document.getElementById('stats').textContent = baseStats;
+  const dp = document.getElementById('datePicker');
+  dp.min = isoDay(oldest); dp.max = isoDay(newest); dp.value = isoDay(newest);
+  dp.addEventListener('keydown', e => { if (e.key === 'Enter') jumpToDate(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !document.getElementById('profileOverlay').classList.contains('hidden')) closeProfile();
+  });
+  const sb = document.getElementById('searchBox');
+  sb.addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => applyFilters(true), 250); });
+  sb.addEventListener('keydown', e => { if (e.key === 'Enter') { clearTimeout(searchTimer); applyFilters(true); } });
+  wireMemberFilter();
+  buildMembers();
+  buildRail();
+  jumpToIndex(-1);
+  observeSentinels();
+  window.addEventListener('scroll', onScroll, { passive: true });
+}
+
+function buildMemberNumbers() {
+  let counter = 0;
+  const assign = uid => { uid = String(uid); if (uid && uid !== 'undefined' && uid !== 'null' && !(uid in memberNo)) memberNo[uid] = ++counter; };
+  for (const m of msgs) {
+    const dd = (m.event || {}).data || {};
+    if (dd.adder_user) assign(dd.adder_user.id);
+    for (const u of dd.added_users || []) assign(u.id);
+    if (dd.user) assign(dd.user.id);
+    if (dd.remover_user) assign(dd.remover_user.id);
+    if (dd.removed_user) assign(dd.removed_user.id);
+    if (!m.system && m.sender_type !== 'system' && m.sender_type !== 'bot' && m.user_id) assign(m.user_id);
+  }
+}
+
+function eventUsers(m) {
+  const dd = (m.event || {}).data || {};
+  const inv = [];
+  if (dd.adder_user) inv.push(dd.adder_user);
+  for (const u of dd.added_users || []) inv.push(u);
+  if (dd.user) inv.push(dd.user);
+  if (dd.remover_user) inv.push(dd.remover_user);
+  if (dd.removed_user) inv.push(dd.removed_user);
+  return inv;
+}
+
+function decorateSystem(m) {
+  let text = esc(m.text || '');
+  const inv = eventUsers(m).filter(u => u.nickname && memberNo[String(u.id)]);
+  inv.sort((a, b) => b.nickname.length - a.nickname.length);
+  const toks = [];
+  inv.forEach((u, k) => {
+    const nick = esc(u.nickname);
+    if (!text.includes(nick)) return;
+    const tok = `\u0000${k}\u0001`;
+    text = text.replace(nick, tok);
+    toks.push([tok, `${nick}<sup class="text-[9px] font-bold text-amber-400/80 ml-px">#${memberNo[String(u.id)]}</sup>`]);
+  });
+  for (const [tok, rep] of toks) text = text.replace(tok, rep);
+  return text;
+}
+
+function buildMembers() {
+  const counts = {};
+  for (const m of msgs) {
+    if (m.system || m.sender_type === 'system' || !m.user_id) continue;
+    counts[m.user_id] = (counts[m.user_id] || 0) + 1;
+    memberNames[m.user_id] = m.name || 'Unknown';
+  }
+  members = Object.entries(counts)
+    .map(([uid, count]) => ({ uid, name: memberNames[uid], count }))
+    .sort((a, b) => b.count - a.count);
+}
+
+function wireMemberFilter() {
+  const input = document.getElementById('memberSearch');
+  input.addEventListener('focus', () => { dropIdx = 0; renderDrop(); });
+  input.addEventListener('input', () => { dropIdx = 0; renderDrop(); });
+  input.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); dropIdx = Math.min(dropIdx + 1, dropList.length - 1); renderDrop(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); dropIdx = Math.max(dropIdx - 1, 0); renderDrop(); }
+    else if (e.key === 'Enter') { e.preventDefault(); if (dropList[dropIdx]) addMember(dropList[dropIdx].uid); }
+    else if (e.key === 'Escape') { hideDrop(); input.blur(); }
+    else if (e.key === 'Backspace' && !input.value && selectedUids.size) {
+      removeMember([...selectedUids].pop());
+    }
+  });
+  document.addEventListener('click', e => {
+    if (!document.getElementById('memberWrap').contains(e.target)) hideDrop();
+  });
+}
+
+function renderDrop() {
+  const q = document.getElementById('memberSearch').value.trim().toLowerCase();
+  dropList = members.filter(m => !selectedUids.has(m.uid) && (!q || m.name.toLowerCase().includes(q))).slice(0, 50);
+  const drop = document.getElementById('memberDrop');
+  if (!dropList.length) {
+    drop.innerHTML = `<div class="px-3 py-2 text-xs text-slate-500 italic">no members match</div>`;
+  } else {
+    drop.innerHTML = dropList.map((m, i) => `
+      <button onmousedown="event.preventDefault()" onclick="addMember('${esc(m.uid)}')"
+        class="w-full flex items-center justify-between gap-2 px-3 py-1.5 text-left ${i === dropIdx ? 'bg-slate-700/60' : 'hover:bg-slate-700/40'}">
+        <span class="flex items-center gap-2 min-w-0">
+          <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:${nameColor(m.name)}"></span>
+          <span class="text-[13px] text-slate-200 truncate">${esc(m.name)}</span>
+        </span>
+        <span class="text-[10px] text-slate-500 flex-shrink-0">${m.count.toLocaleString()}</span>
+      </button>`).join('');
+  }
+  drop.classList.remove('hidden');
+}
+
+function hideDrop() { document.getElementById('memberDrop').classList.add('hidden'); }
+
+function renderChips() {
+  const box = document.getElementById('memberBox');
+  box.querySelectorAll('.mchip').forEach(c => c.remove());
+  const input = document.getElementById('memberSearch');
+  for (const uid of selectedUids) {
+    const name = memberNames[uid] || 'Unknown';
+    const chip = document.createElement('span');
+    chip.className = 'mchip flex items-center gap-1 text-[11px] font-semibold rounded-full pl-2 pr-1 py-0.5 bg-slate-800 border';
+    chip.style.color = nameColor(name);
+    chip.style.borderColor = 'rgba(148,163,184,.25)';
+    chip.innerHTML = `${esc(name)} <button class="text-slate-500 hover:text-white px-0.5" onclick="removeMember('${esc(uid)}')">×</button>`;
+    box.insertBefore(chip, input);
+  }
+}
+
+function addMember(uid) {
+  selectedUids.add(uid);
+  const input = document.getElementById('memberSearch');
+  input.value = '';
+  renderChips();
+  dropIdx = 0;
+  renderDrop();
+  input.focus();
+  applyFilters(true);
+}
+
+function removeMember(uid) {
+  selectedUids.delete(uid);
+  renderChips();
+  applyFilters(true);
+}
+
+function applyFilters(jump) {
+  const q = document.getElementById('searchBox').value.trim().toLowerCase();
+  searchTerm = q;
+  filterActive = !!(q || selectedUids.size);
+  document.getElementById('clearSearch').classList.toggle('hidden', !filterActive);
+  if (!filterActive) {
+    view = allView;
+    document.getElementById('stats').textContent = baseStats;
+  } else {
+    view = [];
+    for (let i = 0; i < msgs.length; i++) {
+      const m = msgs[i];
+      if (selectedUids.size && !selectedUids.has(m.user_id)) continue;
+      if (q && !(m.text || '').toLowerCase().includes(q)) continue;
+      view.push(i);
+    }
+    const who = selectedUids.size ? ` · ${[...selectedUids].map(u => memberNames[u]).join(', ')}` : '';
+    document.getElementById('stats').textContent =
+      `${view.length.toLocaleString()} matching · of ${msgs.length.toLocaleString()} messages${who}`;
+  }
+  if (jump) jumpToIndex(-1);
+}
+
+function clearFilters() {
+  document.getElementById('searchBox').value = '';
+  document.getElementById('memberSearch').value = '';
+  selectedUids.clear();
+  renderChips();
+  hideDrop();
+  applyFilters(true);
+}
+
+function viewInContext(absIdx) {
+  document.getElementById('searchBox').value = '';
+  document.getElementById('memberSearch').value = '';
+  selectedUids.clear();
+  renderChips();
+  applyFilters(false);
+  jumpToIndex(absIdx);
+}
+
+function isoDay(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+function fmtDate(d) { return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); }
+function fmtTime(d) { return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }); }
+
+function buildRail() {
+  const rail = document.getElementById('rail');
+  let html = '', lastKey = '', lastYear = '';
+  for (let i = 0; i < msgs.length; i++) {
+    const d = new Date(msgs[i].created_at * 1000);
+    const key = d.getFullYear() + '-' + d.getMonth();
+    if (key !== lastKey) {
+      lastKey = key;
+      const y = String(d.getFullYear());
+      if (y !== lastYear) {
+        lastYear = y;
+        html += `<div class="font-display text-[10px] font-bold tracking-[.2em] text-slate-600 mt-4 mb-1">${y}</div>`;
+      }
+      html += `<button onclick="jumpToTs(${msgs[i].created_at})" class="railMonth block w-full text-right text-[11px] font-medium text-slate-500 py-0.5 pr-1">${d.toLocaleDateString(undefined, { month: 'short' })}</button>`;
+    }
+  }
+  rail.innerHTML = html;
+}
+
+function firstPosOnOrAfter(ts) {
+  let lo = 0, hi = view.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (msgs[view[mid]].created_at < ts) lo = mid + 1; else hi = mid;
+  }
+  return Math.min(lo, view.length - 1);
+}
+
+function jumpToTs(ts) {
+  if (!view.length) return;
+  const pos = firstPosOnOrAfter(ts);
+  document.getElementById('datePicker').value = isoDay(new Date(msgs[view[pos]].created_at * 1000));
+  jumpToIndex(pos);
+}
+
+function jumpToDate() {
+  const v = document.getElementById('datePicker').value;
+  if (!v) return;
+  jumpToTs(new Date(v + 'T00:00:00').getTime() / 1000);
+}
+
+function jumpYearsBack(years) {
+  jumpToTs(Date.now() / 1000 - years * 365.25 * 86400);
+}
+
+function jumpToIndex(pos) {
+  if (pos === -1) pos = view.length - 1;
+  suppressObservers = true;
+  winStart = Math.max(0, pos - 40);
+  winEnd = Math.min(view.length, pos + 120);
+  renderWindow();
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const el = document.getElementById('msg-' + pos);
+    if (el) {
+      el.scrollIntoView({ block: 'center' });
+      el.classList.add('highlight-jump');
+      setTimeout(() => el.classList.remove('highlight-jump'), 2400);
+    }
+    setTimeout(() => { suppressObservers = false; }, 350);
+  }));
+  updateEdgeButtons();
+}
+
+function renderWindow() {
+  const box = document.getElementById('messages');
+  box.innerHTML = '';
+  if (!view.length) {
+    box.innerHTML = `<div class="text-center py-20">
+      <div class="font-display text-lg font-semibold text-slate-500">no messages match</div>
+      <p class="text-xs text-slate-600 mt-1.5">try a different search or member filter</p>
+    </div>`;
+    return;
+  }
+  const frag = document.createDocumentFragment();
+  for (let p = winStart; p < winEnd; p++) frag.appendChild(renderMsg(p));
+  box.appendChild(frag);
+}
+
+function extendUp() {
+  if (winStart === 0 || suppressObservers) return;
+  const prevStart = winStart;
+  winStart = Math.max(0, winStart - CHUNK);
+  const box = document.getElementById('messages');
+  const frag = document.createDocumentFragment();
+  for (let p = winStart; p < prevStart; p++) frag.appendChild(renderMsg(p));
+  const before = document.documentElement.scrollHeight;
+  box.insertBefore(frag, box.firstChild);
+  const oldFirst = document.getElementById('msg-' + prevStart);
+  if (oldFirst) oldFirst.replaceWith(renderMsg(prevStart));
+  window.scrollBy(0, document.documentElement.scrollHeight - before);
+  updateEdgeButtons();
+}
+
+function extendDown() {
+  if (winEnd >= view.length || suppressObservers) return;
+  const prevEnd = winEnd;
+  winEnd = Math.min(view.length, winEnd + CHUNK);
+  const box = document.getElementById('messages');
+  const frag = document.createDocumentFragment();
+  for (let p = prevEnd; p < winEnd; p++) frag.appendChild(renderMsg(p));
+  box.appendChild(frag);
+  updateEdgeButtons();
+}
+
+function updateEdgeButtons() {
+  document.getElementById('loadOlderBtn').classList.toggle('hidden', winStart === 0);
+  document.getElementById('loadNewerBtn').classList.toggle('hidden', winEnd >= view.length);
+  document.getElementById('toLatest').classList.toggle('hiddenFloat', winEnd >= view.length);
+}
+
+function observeSentinels() {
+  new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) extendUp(); }),
+    { rootMargin: '600px' }).observe(document.getElementById('topSentinel'));
+  new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) extendDown(); }),
+    { rootMargin: '600px' }).observe(document.getElementById('bottomSentinel'));
+}
+
+function onScroll() {
+  const el = document.elementFromPoint(window.innerWidth / 2, 185);
+  const wrap = el && el.closest('[data-ts]');
+  if (wrap) {
+    const d = new Date(+wrap.dataset.ts * 1000);
+    const float = document.getElementById('dateFloat');
+    float.textContent = d.toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' });
+    float.classList.remove('hiddenFloat');
+    clearTimeout(floatTimer);
+    floatTimer = setTimeout(() => float.classList.add('hiddenFloat'), 1100);
+  }
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function replyJump(mid) {
+  const idx = idToIdx[mid];
+  if (idx === undefined) return;
+  if (filterActive) viewInContext(idx);
+  else jumpToIndex(idx);
+}
+
+function replyQuote(m) {
+  const rep = (m.attachments || []).find(a => a.type === 'reply');
+  if (!rep) return '';
+  const orig = msgs[idToIdx[rep.reply_id !== undefined ? rep.reply_id : rep.base_reply_id]];
+  if (!orig) {
+    return `<div class="mt-1 mb-1 border-l-2 border-slate-600 bg-slate-800/40 rounded-r-lg px-2.5 py-1.5 text-[11px] italic text-slate-600">original message unavailable</div>`;
+  }
+  const oname = orig.name || 'Unknown';
+  let snippet = (orig.text || '').slice(0, 110);
+  if ((orig.text || '').length > 110) snippet += '…';
+  if (!snippet) {
+    const oa = (orig.attachments || []).find(a => a.type === 'image' || a.type === 'linked_image' || a.type === 'video');
+    snippet = oa ? (oa.type === 'video' ? '🎬 video' : '📷 photo') : '(no text)';
+  }
+  return `<button onclick="replyJump('${esc(orig.id)}')" title="jump to original"
+    class="block w-full text-left mt-1 mb-1 border-l-2 rounded-r-lg px-2.5 py-1.5 bg-slate-800/50 hover:bg-slate-700/50 transition-colors" style="border-color:${nameColor(oname)}">
+    <span class="text-[11px] font-semibold font-display" style="color:${nameColor(oname)}">↩ ${esc(oname)}</span>
+    <span class="block text-[11.5px] text-slate-400 truncate">${esc(snippet)}</span>
+  </button>`;
+}
+
+function markText(text) {
+  let safe = esc(text);
+  if (searchTerm) {
+    const q = esc(searchTerm).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    safe = safe.replace(new RegExp(q, 'gi'), '<mark>$&</mark>');
+  }
+  return safe;
+}
+
+function renderMsg(p) {
+  const idx = view[p];
+  const m = msgs[idx];
+  const d = new Date(m.created_at * 1000);
+  const wrap = document.createElement('div');
+  wrap.id = 'msg-' + p;
+  wrap.dataset.ts = m.created_at;
+  wrap.className = 'px-2';
+
+  let html = '';
+  const prev = p > 0 ? msgs[view[p - 1]] : null;
+  const newDay = !prev || isoDay(new Date(prev.created_at * 1000)) !== isoDay(d);
+  if (newDay) {
+    html += `<div class="flex items-center gap-4 mt-8 mb-4">
+      <div class="flex-1 h-px bg-gradient-to-r from-transparent via-slate-700 to-slate-700"></div>
+      <span class="font-display text-[11px] font-semibold tracking-wide text-amber-300/90 bg-[#1e293b] border border-slate-700/80 rounded-full px-3.5 py-1 shadow">${fmtDate(d)}</span>
+      <div class="flex-1 h-px bg-gradient-to-l from-transparent via-slate-700 to-slate-700"></div>
+    </div>`;
+  }
+
+  if (m.system || m.sender_type === 'system') {
+    html += `<div class="text-center text-[11px] text-slate-500 italic py-1.5">— ${decorateSystem(m)} —</div>`;
+    wrap.innerHTML = html;
+    return wrap;
+  }
+
+  const name = m.name || 'Unknown';
+  const likes = (m.favorited_by || []).length;
+  const grouped = !filterActive && !newDay && prev && !prev.system && prev.sender_type !== 'system'
+    && prev.user_id === m.user_id && (m.created_at - prev.created_at) < 600;
+
+  let attachHtml = '';
+  for (const a of m.attachments || []) {
+    if (a.type === 'image' || a.type === 'linked_image') {
+      attachHtml += `<a href="${esc(a.url)}" target="_blank"><img src="${esc(a.url)}" loading="lazy" class="msgimg mt-2 rounded-xl max-h-72 max-w-full border border-slate-700/60 shadow-lg"></a>`;
+    } else if (a.type === 'video') {
+      attachHtml += `<video src="${esc(a.url)}" controls preload="none" class="mt-2 rounded-xl max-h-72 max-w-full border border-slate-700/60"></video>`;
+    }
+  }
+
+  const likeBadge = likes
+    ? `<span class="text-[10px] font-semibold text-rose-300/90 bg-rose-400/10 border border-rose-400/20 rounded-full px-1.5 py-px">♥ ${likes}</span>`
+    : '';
+  const ctxBtn = filterActive
+    ? `<button onclick="viewInContext(${idx})" title="view in context" class="ctxBtn text-[10px] font-semibold text-amber-400/80 hover:text-amber-300 border border-amber-400/25 rounded-full px-2 py-px">context ↗</button>`
+    : '';
+
+  const quote = replyQuote(m);
+
+  if (grouped) {
+    html += `<div class="flex gap-3 group">
+      <div class="w-9 flex-shrink-0 text-right text-[9px] text-slate-600 opacity-0 group-hover:opacity-100 pt-1 select-none">${fmtTime(d)}</div>
+      <div class="min-w-0 flex-1 py-px">
+        ${quote}
+        ${m.text ? `<p class="text-[13.5px] leading-relaxed text-slate-200 whitespace-pre-wrap break-words">${markText(m.text)} ${likeBadge}</p>` : likeBadge}
+        ${attachHtml}
+      </div>
+    </div>`;
+  } else {
+    const avatar = m.avatar_url
+      ? `<img src="${esc(m.avatar_url)}" loading="lazy" onclick="openProfile('${esc(String(m.user_id || ''))}')" class="w-9 h-9 rounded-xl object-cover flex-shrink-0 mt-0.5 border border-slate-700/50 cursor-pointer hover:ring-2 hover:ring-amber-400/50" onerror="this.outerHTML=fallbackAvatar(this.dataset.n,this.dataset.u)" data-n="${esc(name)}" data-u="${esc(String(m.user_id || ''))}">`
+      : fallbackAvatar(name, m.user_id);
+    html += `<div class="flex gap-3 mt-3.5">
+      ${avatar}
+      <div class="min-w-0 flex-1">
+        <div class="flex items-baseline gap-2 flex-wrap">
+          <span onclick="openProfile('${esc(String(m.user_id || ''))}')" class="font-display text-[13px] font-semibold cursor-pointer hover:underline decoration-amber-400/50" style="color:${nameColor(name)}">${esc(name)}</span>
+          <span class="text-[10px] text-slate-600">${fmtTime(d)}</span>
+          ${ctxBtn}
+        </div>
+        ${quote}
+        ${m.text ? `<p class="text-[13.5px] leading-relaxed text-slate-200 whitespace-pre-wrap break-words">${markText(m.text)} ${likeBadge}</p>` : likeBadge}
+        ${attachHtml}
+      </div>
+    </div>`;
+  }
+  wrap.innerHTML = html;
+  return wrap;
+}
+
+function fallbackAvatar(name, uid) {
+  return `<div onclick="openProfile('${esc(uid || '')}')" class="w-9 h-9 rounded-xl flex-shrink-0 mt-0.5 flex items-center justify-center text-[#0f172a] text-sm font-bold font-display cursor-pointer hover:ring-2 hover:ring-amber-400/50" style="background:${nameColor(name)}">${esc((name[0] || '?').toUpperCase())}</div>`;
+}
+
+function memberProfile(uid) {
+  uid = String(uid);
+  const timeline = [];
+  let prevName = null, msgCount = 0, likesGot = 0, firstMsg = null, lastMsg = null, avatarUrl = null;
+  for (const m of msgs) {
+    const dd = (m.event || {}).data || {};
+    const ts = m.created_at;
+    if ((dd.added_users || []).some(u => String(u.id) === uid)) {
+      const by = dd.adder_user ? dd.adder_user.nickname : null;
+      timeline.push({ ts, color: '#34d399', text: by ? `added to the group by ${by}` : 'added to the group' });
+    }
+    if (dd.user && String(dd.user.id) === uid && (m.event.type || '').includes('rejoin')) {
+      timeline.push({ ts, color: '#34d399', text: 'rejoined the group' });
+    }
+    if (dd.removed_user && String(dd.removed_user.id) === uid) {
+      const by = dd.remover_user ? dd.remover_user.nickname : null;
+      timeline.push({ ts, color: by ? '#f87171' : '#94a3b8', text: by ? `removed from the group by ${by}` : 'left the group' });
+    }
+    if (String(m.user_id) === uid && !m.system && m.sender_type !== 'system') {
+      msgCount++;
+      likesGot += (m.favorited_by || []).length;
+      if (!firstMsg) { firstMsg = m; timeline.push({ ts, color: '#818cf8', text: `first message — "${(m.text || '📷').slice(0, 60)}"` }); }
+      lastMsg = m;
+      if (m.avatar_url) avatarUrl = m.avatar_url;
+      if (m.name && m.name !== prevName) {
+        if (prevName !== null) timeline.push({ ts, color: '#fbbf24', text: `changed nickname "${prevName}" → "${m.name}"` });
+        prevName = m.name;
+      }
+    }
+  }
+  timeline.sort((a, b) => a.ts - b.ts);
+  const names = [];
+  let nm = null;
+  for (const m of msgs) {
+    if (String(m.user_id) === uid && !m.system && m.sender_type !== 'system' && m.name && m.name !== nm) { names.push(m.name); nm = m.name; }
+  }
+  return { timeline, msgCount, likesGot, firstMsg, lastMsg, avatarUrl, names: [...new Set(names)], currentName: prevName || 'Unknown' };
+}
+
+function openProfile(uid) {
+  if (!uid) return;
+  const p = memberProfile(uid);
+  const no = memberNo[String(uid)];
+  const av = p.avatarUrl
+    ? `<img src="${esc(p.avatarUrl)}" class="w-14 h-14 rounded-2xl object-cover border border-slate-600">`
+    : `<div class="w-14 h-14 rounded-2xl flex items-center justify-center text-[#0f172a] text-xl font-bold font-display" style="background:${nameColor(p.currentName)}">${esc((p.currentName[0] || '?').toUpperCase())}</div>`;
+  const dt = ts => new Date(ts * 1000).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) +
+    ' · ' + new Date(ts * 1000).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  document.getElementById('profileCard').innerHTML = `
+    <div class="p-5">
+      <div class="flex items-center gap-4">
+        ${av}
+        <div class="min-w-0 flex-1">
+          <div class="font-display text-lg font-bold" style="color:${nameColor(p.currentName)}">${esc(p.currentName)}</div>
+          <div class="text-[11px] text-slate-500 font-medium">${no ? `member #${no}` : 'bot / unknown'} · id ${esc(String(uid))}</div>
+        </div>
+        <button onclick="closeProfile()" class="text-slate-500 hover:text-white text-xl font-bold px-1">×</button>
+      </div>
+      <div class="grid grid-cols-3 gap-2 mt-4">
+        <div class="bg-[#0f172a] rounded-xl p-2.5 text-center"><div class="font-display font-bold text-slate-100">${p.msgCount.toLocaleString()}</div><div class="text-[10px] text-slate-500">messages</div></div>
+        <div class="bg-[#0f172a] rounded-xl p-2.5 text-center"><div class="font-display font-bold text-rose-300">♥ ${p.likesGot.toLocaleString()}</div><div class="text-[10px] text-slate-500">likes received</div></div>
+        <div class="bg-[#0f172a] rounded-xl p-2.5 text-center"><div class="font-display font-bold text-amber-300">${p.names.length}</div><div class="text-[10px] text-slate-500">nicknames</div></div>
+      </div>
+      ${p.names.length ? `<div class="mt-4">
+        <div class="font-display text-[11px] font-bold tracking-[.15em] text-slate-500 mb-2">NICKNAMES</div>
+        <div class="flex flex-wrap gap-1.5">${p.names.map(n => `<span class="text-[11px] font-medium rounded-full px-2.5 py-0.5 bg-[#0f172a] border border-slate-700" style="color:${nameColor(n)}">${esc(n)}</span>`).join('')}</div>
+      </div>` : ''}
+      <div class="mt-4">
+        <div class="font-display text-[11px] font-bold tracking-[.15em] text-slate-500 mb-2">HISTORY</div>
+        <div class="max-h-64 overflow-y-auto pr-1">
+          ${p.timeline.map(t => `<div class="flex gap-2.5 items-start py-1">
+            <span class="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style="background:${t.color}"></span>
+            <div class="min-w-0"><div class="text-[12px] text-slate-300 break-words">${esc(t.text)}</div><div class="text-[10px] text-slate-600">${dt(t.ts)}</div></div>
+          </div>`).join('') || '<div class="text-xs text-slate-600 italic">no recorded events</div>'}
+        </div>
+      </div>
+      <div class="flex gap-2 mt-5">
+        <button onclick="closeProfile(); addMember('${esc(String(uid))}')" class="flex-1 bg-amber-400 hover:bg-amber-300 text-[#0f172a] text-sm font-semibold py-2 rounded-xl">filter to their messages</button>
+        <button onclick="closeProfile()" class="px-4 bg-[#0f172a] border border-slate-700 text-slate-300 text-sm rounded-xl hover:border-slate-500">close</button>
+      </div>
+    </div>`;
+  document.getElementById('profileOverlay').classList.remove('hidden');
+}
+
+function closeProfile() { document.getElementById('profileOverlay').classList.add('hidden'); }
+
+let likesByUid = null;
+function computeLikes() {
+  if (likesByUid) return;
+  likesByUid = {};
+  for (const m of msgs) {
+    if (!m.user_id || m.system || m.sender_type === 'system') continue;
+    likesByUid[m.user_id] = (likesByUid[m.user_id] || 0) + (m.favorited_by || []).length;
+  }
+}
+
+function openLeaderboard() {
+  computeLikes();
+  const top = members[0].count;
+  const rankColor = i => i === 0 ? '#fbbf24' : i === 1 ? '#cbd5e1' : i === 2 ? '#d97706' : '#475569';
+  document.getElementById('profileCard').innerHTML = `
+    <div class="p-5">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="font-display text-lg font-bold text-white">🏆 Leaderboard</div>
+          <div class="text-[11px] text-slate-500 font-medium">${members.length} members who sent messages · by activity</div>
+        </div>
+        <button onclick="closeProfile()" class="text-slate-500 hover:text-white text-xl font-bold px-1">×</button>
+      </div>
+      <div class="mt-4 max-h-[60vh] overflow-y-auto pr-1">
+        ${members.map((mb, i) => `
+          <button onclick="openProfile('${esc(mb.uid)}')" class="w-full text-left flex items-center gap-3 py-1.5 px-2 rounded-xl hover:bg-slate-700/40">
+            <span class="font-display text-[12px] font-bold w-7 text-right flex-shrink-0" style="color:${rankColor(i)}">${i + 1}</span>
+            <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:${nameColor(mb.name)}"></span>
+            <span class="min-w-0 flex-1">
+              <span class="flex items-baseline gap-1.5">
+                <span class="text-[13px] font-semibold truncate" style="color:${nameColor(mb.name)}">${esc(mb.name)}</span>
+                <span class="text-[9px] text-slate-600 flex-shrink-0">#${memberNo[mb.uid] || '—'}</span>
+              </span>
+              <span class="block h-1 rounded-full bg-slate-800 mt-1"><span class="block h-1 rounded-full" style="width:${Math.max(1, mb.count / top * 100)}%;background:linear-gradient(90deg,#f59e0b,#fbbf24)"></span></span>
+            </span>
+            <span class="text-right flex-shrink-0">
+              <span class="block text-[12px] font-semibold text-slate-200">${mb.count.toLocaleString()}</span>
+              <span class="block text-[9px] text-rose-300/80">♥ ${(likesByUid[mb.uid] || 0).toLocaleString()}</span>
+            </span>
+          </button>`).join('')}
+      </div>
+    </div>`;
+  document.getElementById('profileOverlay').classList.remove('hidden');
+}
+
+boot();
+</script>
+</body>
+</html>

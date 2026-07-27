@@ -1,0 +1,14 @@
+-- GroupMe Archive
+-- Copyright (c) 2026 Shalom Karr
+-- Source-available under AGPL-3.0 WITH the Commons Clause: no commercial or paid
+-- use without permission, and derivatives must remain open under the same terms.
+-- See the LICENSE file for full terms.
+
+create table if not exists bots (
+  group_id text primary key,
+  bot_id text not null,
+  bot_name text,
+  created_at timestamptz not null default now()
+);
+
+alter table bots enable row level security;

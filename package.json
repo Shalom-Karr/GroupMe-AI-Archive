@@ -1,0 +1,12 @@
+{
+  "name": "groupme-archive",
+  "version": "1.0.0",
+  "description": "Full-history GroupMe archiving platform: Postgres archive, login-gated dashboard, points leaderboard, and an AI archivist (dashboard + GroupMe bot).",
+  "private": true,
+  "license": "SEE LICENSE IN LICENSE",
+  "author": "Shalom Karr",
+  "devDependencies": {
+    "supabase": "^2.109.1",
+    "tailwindcss": "^3.4.19"
+  }
+}
