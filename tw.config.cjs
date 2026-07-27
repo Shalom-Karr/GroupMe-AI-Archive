@@ -5,7 +5,7 @@
 // See the LICENSE file for full terms.
 
 module.exports = {
-  content: ['./index.html', './leaderboard.html', './admin.html'],
+  content: ['./index.html', './leaderboard.html', './admin.html', './members.html'],
   theme: {
     extend: {
       fontFamily: {

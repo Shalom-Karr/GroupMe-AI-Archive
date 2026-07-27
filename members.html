@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Leaderboard — GroupMe Archive</title>
+<title>Members · SKChats Archive</title>
 <link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -37,35 +37,43 @@
   ::-webkit-scrollbar-track { background: #0f172a; }
   ::-webkit-scrollbar-thumb { background: #334155; border-radius: 5px; }
   ::selection { background: rgba(251,191,36,.3); }
-  .lbRow { transition: background .12s, transform .12s; cursor: pointer; }
-  .lbRow:hover { background: rgba(51,65,85,.35); transform: translateX(2px); }
-  .podium { transition: transform .15s; cursor: pointer; }
-  .podium:hover { transform: translateY(-4px); }
+  .mRow { transition: background .12s, transform .12s; cursor: pointer; }
+  .mRow:hover { background: rgba(51,65,85,.35); transform: translateX(2px); }
+  .mRow-grid { display: grid; grid-template-columns: 2.5rem 1fr; align-items: center; gap: .625rem; }
+  @media (min-width: 640px) {
+    .mRow-grid { grid-template-columns: 2.5rem 1fr 5rem 6.5rem 5.5rem 7rem; }
+    .mRow-grid .col-sm { display: block; }
+  }
+  .col-sm { display: none; }
+  .detail-table { width: 100%; font-size: 12px; color: #cbd5e1; border-collapse: collapse; }
+  .detail-table th { font-family: "Bricolage Grotesque", sans-serif; font-size: 10px; font-weight: 700; letter-spacing: .15em; color: #64748b; text-align: left; padding-bottom: .5rem; border-bottom: 1px solid #1e293b; white-space: nowrap; }
+  .detail-table td { padding: .4rem .5rem .4rem 0; border-bottom: 1px solid rgba(30,41,59,.6); vertical-align: top; }
+  .detail-table tr:last-child td { border-bottom: 0; }
 </style>
 </head>
 <body class="text-slate-200">
 
 <header class="border-b border-slate-800">
   <div class="max-w-4xl xl:max-w-6xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-3">
-    <div class="flex items-center gap-3 min-w-0">
-      <img id="groupAvatar" class="hidden w-11 h-11 rounded-xl object-cover border border-slate-700 flex-shrink-0">
-      <div class="min-w-0">
-        <h1 class="font-display font-bold text-2xl tracking-tight text-white leading-none">🏆 <span id="groupName">Leaderboard</span></h1>
-        <p id="stats" class="text-[11px] text-slate-500 mt-1 font-medium tracking-wide">loading…</p>
-      </div>
+    <div class="min-w-0">
+      <h1 class="font-display font-bold text-2xl tracking-tight text-white leading-none">&#x1F465; Members Directory</h1>
+      <p id="headerStats" class="text-[11px] text-slate-500 mt-1 font-medium tracking-[.15em]">loading&hellip;</p>
     </div>
-    <div class="flex items-center gap-2">
-      <select id="groupSel" class="bg-[#1e293b] border border-slate-700 rounded-xl px-3 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-amber-400/60"></select>
-      <a href="members.html" class="text-sm font-medium text-amber-300/90 border border-amber-400/40 rounded-full px-4 py-1.5 hover:bg-amber-400/10">members</a>
-      <a href="index.html" class="text-sm font-medium text-amber-300/90 border border-amber-400/40 rounded-full px-4 py-1.5 hover:bg-amber-400/10">← back to archive</a>
+    <div class="flex flex-wrap items-center gap-2">
+      <a href="index.html" class="text-sm font-medium text-amber-300/90 border border-amber-400/40 rounded-full px-4 py-1.5 hover:bg-amber-400/10 transition">Dashboard</a>
+      <a href="leaderboard.html" class="text-sm font-medium text-amber-300/90 border border-amber-400/40 rounded-full px-4 py-1.5 hover:bg-amber-400/10 transition">Leaderboard</a>
+      <span class="text-sm font-semibold text-white border border-amber-400/60 bg-amber-400/10 rounded-full px-4 py-1.5">Members</span>
+      <a href="admin.html" class="text-sm font-medium text-amber-300/90 border border-amber-400/40 rounded-full px-4 py-1.5 hover:bg-amber-400/10 transition">Admin</a>
+      <button id="signOutBtn" onclick="signOut()" class="hidden text-sm font-medium text-slate-400 border border-slate-700 rounded-full px-4 py-1.5 hover:text-white transition">sign out</button>
     </div>
   </div>
 </header>
 
+<!-- Login overlay -->
 <div id="loginOverlay" class="hidden fixed inset-0 z-[80] bg-[#0f172a] flex items-center justify-center px-4">
   <div class="w-full max-w-sm bg-[#1e293b] border border-slate-700 rounded-2xl p-6">
-    <div class="font-display text-xl font-bold text-white mb-1">🏆 Leaderboard</div>
-    <p class="text-[12px] text-slate-500 mb-4">Private — sign in to view.</p>
+    <div class="font-display text-xl font-bold text-white mb-1">&#x1F465; Members Directory</div>
+    <p class="text-[12px] text-slate-500 mb-4">Private &mdash; sign in to view.</p>
     <input id="loginEmail" type="email" placeholder="email" autocomplete="username"
       class="w-full bg-[#0f172a] border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-400/60 mb-2">
     <input id="loginPass" type="password" placeholder="password" autocomplete="current-password"
@@ -76,349 +84,515 @@
 </div>
 
 <main class="max-w-4xl xl:max-w-6xl mx-auto px-4 pb-24">
-  <details class="mt-6 bg-[#1e293b66] border border-slate-800 rounded-2xl">
-    <summary class="px-5 py-3 cursor-pointer select-none font-display text-sm font-semibold text-amber-300/90 hover:text-amber-300">ℹ How the leaderboard works</summary>
-    <div class="px-5 pb-5 text-[13px] leading-relaxed text-slate-300">
-      <p class="mb-3">Every member's score starts at zero, and then:</p>
-      <ul class="space-y-1.5 mb-4">
-        <li><b class="text-emerald-300">Messages</b> — you earn <b>1 point</b> for every message you send in the group.</li>
-        <li><b class="text-rose-300">Likes received</b> — you earn <b>20 points</b> for every like your messages receive from other members.</li>
-        <li><b class="text-rose-300">Likes given</b> — you earn <b>10 points</b> for every like you give on someone else's message.</li>
-        <li><b class="text-slate-200">Leaving</b> — you lose <b>25 points</b> every time you leave the group on your own.</li>
-        <li><b class="text-red-400">Getting kicked</b> — you lose <b>500 points</b> every time someone removes you from the group.</li>
-        <li><b class="text-slate-400">Deleted messages</b> — you lose <b>5 points</b> for every message of yours that gets deleted.</li>
-        <li><b class="text-amber-300">Inactive months</b> — you lose <b>350 points</b> for every calendar month in which you posted nothing, counted starting from the month you joined all the way through the current month. (Months where you sent at least one message cost nothing.)</li>
-      </ul>
-      <div class="bg-[#0f172a] border border-slate-700 rounded-xl px-4 py-3 font-mono text-[12px] text-slate-300">
-        Points = (messages × 1) + (likes received × 20) + (likes given × 10) − (leaves × 25) − (kicks × 500) − (deleted messages × 5) − (inactive months × 350)
+
+  <!-- Loading -->
+  <div id="loadingState" class="mt-16 text-center text-slate-500 text-sm animate-pulse">Loading members&hellip;</div>
+
+  <!-- Error -->
+  <div id="errorState" class="hidden mt-16 text-center text-rose-400 text-sm"></div>
+
+  <!-- Content -->
+  <div id="content" class="hidden">
+
+    <!-- Search + controls -->
+    <div class="mt-6 bg-[#1e293b66] border border-slate-800 rounded-2xl p-4">
+      <div class="flex flex-wrap gap-3 items-center">
+        <input id="searchInput" type="search" placeholder="Search by name or user ID&hellip;"
+          autocomplete="off" spellcheck="false"
+          class="flex-1 min-w-[200px] bg-[#0f172a] border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-400/60"
+          oninput="applyFilter()">
+        <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer select-none">
+          <input type="checkbox" id="botToggle" onchange="applyFilter()"
+            style="accent-color:#fbbf24;width:1rem;height:1rem;">
+          Show bots
+        </label>
       </div>
-      <p class="mt-3 text-[11px] text-slate-500">Members with a negative total don't appear on the leaderboard.</p>
+      <p class="mt-2 text-[11px] text-slate-600 leading-relaxed">Search by name or user ID. (GroupMe&rsquo;s API does not expose phone numbers, so phone search isn&rsquo;t available.)</p>
     </div>
-  </details>
-  <div id="periodTabs" class="flex flex-wrap gap-1.5 mt-6">
-    <button data-period="all" class="ptab text-[11px] font-semibold rounded-full px-3 py-1 border">All time</button>
-    <button data-period="day" class="ptab text-[11px] font-semibold rounded-full px-3 py-1 border">Today</button>
-    <button data-period="week" class="ptab text-[11px] font-semibold rounded-full px-3 py-1 border">This Week</button>
-    <button data-period="month" class="ptab text-[11px] font-semibold rounded-full px-3 py-1 border">This Month</button>
-    <button data-period="year" class="ptab text-[11px] font-semibold rounded-full px-3 py-1 border">This Year</button>
-  </div>
-  <div id="podium" class="grid grid-cols-3 gap-3 items-end mt-10 mb-8 max-w-2xl mx-auto"></div>
-  <div class="bg-[#1e293b66] border border-slate-800 rounded-2xl overflow-hidden">
-    <div class="hidden sm:grid grid-cols-[3rem_1fr_7rem_7rem_5.5rem_6.5rem_6.5rem] gap-2 px-4 py-2.5 text-[10px] font-bold tracking-[.15em] text-slate-500 border-b border-slate-800 font-display">
-      <div>#</div><div>MEMBER</div><div class="text-right">POINTS</div><div class="text-right">MESSAGES</div><div class="text-right">♥ LIKES</div><div class="text-right">FIRST ACTIVE</div><div class="text-right">LAST ACTIVE</div>
+
+    <!-- Result count -->
+    <div id="resultCount" class="mt-3 text-[11px] text-slate-500 font-medium px-1"></div>
+
+    <!-- Directory list -->
+    <div class="mt-2 bg-[#1e293b66] border border-slate-800 rounded-2xl overflow-hidden">
+      <!-- Column header — sm+ only -->
+      <div class="hidden sm:block border-b border-slate-800">
+        <div class="mRow-grid px-4 py-2.5 text-[10px] font-bold tracking-[.15em] text-slate-500 font-display">
+          <div></div>
+          <div>MEMBER</div>
+          <div class="col-sm text-center">GROUPS</div>
+          <div class="col-sm text-right">MESSAGES</div>
+          <div class="col-sm text-right">LIKES</div>
+          <div class="col-sm text-right">ROLE</div>
+        </div>
+      </div>
+      <div id="directoryList"></div>
     </div>
-    <div id="rows"></div>
-  </div>
+
+  </div><!-- /content -->
 </main>
 
-<div id="profileOverlay" class="hidden fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm overflow-y-auto" onclick="if(event.target===this)closeProfile()">
-  <div id="profileCard" class="max-w-md mx-auto mt-14 mb-10 bg-[#1e293b] border border-slate-700 rounded-2xl shadow-2xl"></div>
+<!-- Detail modal -->
+<div id="detailOverlay"
+  class="hidden fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm overflow-y-auto"
+  onclick="if(event.target===this)closeDetail()">
+  <div id="detailCard"
+    role="dialog" aria-modal="true" aria-labelledby="detailName"
+    class="max-w-2xl mx-auto mt-14 mb-10 bg-[#1e293b] border border-slate-700 rounded-2xl shadow-2xl p-6">
+  </div>
 </div>
 
 <script src="app.js"></script>
 <script>
-let gid = null, members = [], memberByUid = {}, totalMsgs = 0;
-let colorCache = {};
-
+/* ── helpers not in app.js ─────────────────────────────────────────── */
 const NAME_HUES = [28, 350, 168, 262, 200, 90, 320, 12, 140, 230];
+const _colorCache = {};
 function nameColor(name) {
-  if (!colorCache[name]) {
+  if (!_colorCache[name]) {
     let h = 0;
     for (const c of name || '?') h = (h * 31 + c.charCodeAt(0)) >>> 0;
-    colorCache[name] = `hsl(${NAME_HUES[h % NAME_HUES.length]} 75% 68%)`;
+    _colorCache[name] = `hsl(${NAME_HUES[h % NAME_HUES.length]} 75% 68%)`;
   }
-  return colorCache[name];
+  return _colorCache[name];
 }
-function fmtD(ts) { return ts ? new Date(ts * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: '2-digit' }) : '—'; }
+
+function fmtD(ts) {
+  return ts ? new Date(ts * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: '2-digit' }) : '—';
+}
 
 async function ensureAuth() {
   loadSession();
   if (session && session.expires_at - 60 > Date.now() / 1000) return true;
   if (session?.refresh_token) {
     const r = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=refresh_token`, {
-      method: 'POST', headers: { apikey: ANON, 'Content-Type': 'application/json' },
+      method: 'POST',
+      headers: { apikey: ANON, 'Content-Type': 'application/json' },
       body: JSON.stringify({ refresh_token: session.refresh_token }),
     });
-    if (r.ok) { const d = await r.json(); session = { access_token: d.access_token, refresh_token: d.refresh_token, expires_at: Math.floor(Date.now() / 1000) + (d.expires_in ?? 3600), email: session.email }; localStorage.setItem('sk_auth', JSON.stringify(session)); return true; }
+    if (r.ok) {
+      const d = await r.json();
+      session = { access_token: d.access_token, refresh_token: d.refresh_token, expires_at: Math.floor(Date.now() / 1000) + (d.expires_in ?? 3600), email: session.email };
+      localStorage.setItem('sk_auth', JSON.stringify(session));
+      return true;
+    }
   }
-  session = null; localStorage.removeItem('sk_auth'); return false;
+  session = null;
+  localStorage.removeItem('sk_auth');
+  return false;
 }
-async function doSignIn() {
-  const err = document.getElementById('loginErr'); err.classList.add('hidden');
-  const r = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=password`, {
-    method: 'POST', headers: { apikey: ANON, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: document.getElementById('loginEmail').value.trim(), password: document.getElementById('loginPass').value }),
-  });
-  const d = await r.json();
-  if (!r.ok) { err.textContent = d.error_description ?? d.msg ?? 'sign in failed'; err.classList.remove('hidden'); return; }
-  session = { access_token: d.access_token, refresh_token: d.refresh_token, expires_at: Math.floor(Date.now() / 1000) + (d.expires_in ?? 3600), email: document.getElementById('loginEmail').value.trim() };
-  localStorage.setItem('sk_auth', JSON.stringify(session));
-  document.getElementById('loginOverlay').classList.add('hidden');
-  boot().catch(e => { document.getElementById('stats').textContent = 'failed: ' + e.message; });
-}
+
 async function sb(path) {
-  const r = await fetch(`${SUPA_URL}/rest/v1/${path}`, { headers: { apikey: ANON, Authorization: `Bearer ${session?.access_token ?? ANON}` } });
+  const r = await fetch(`${SUPA_URL}/rest/v1/${path}`, {
+    headers: { apikey: ANON, Authorization: `Bearer ${session?.access_token ?? ANON}` },
+  });
   if (r.status === 401 || r.status === 403) { signOut(); throw new Error('session expired'); }
   if (!r.ok) throw new Error(`${r.status}`);
   return r.json();
 }
 
-let groups = [];
-async function boot() {
-  groups = await cached('groups', 300000, () => sb('groups_view?select=*&order=message_count.desc'));
-  const sel = document.getElementById('groupSel');
-  sel.innerHTML = groups.map(g => `<option value="${esc(g.group_id)}">${esc(g.group_name || g.group_id)}</option>`).join('')
-    + '<option value="all">🌐 All my groups</option>';
-  const want = new URLSearchParams(location.search).get('group');
-  if (want && [...sel.options].some(o => o.value === want)) sel.value = want;
-  sel.addEventListener('change', () => load(sel.value));
-  document.querySelectorAll('#periodTabs .ptab').forEach(b => b.addEventListener('click', () => {
-    period = b.dataset.period;
-    styleTabs();
-    load(sel.value);
-  }));
-  styleTabs();
-  await load(sel.value);
-}
-
-let period = 'all', rankTotal = 0;
-const PERIOD_LABEL = { day: 'Today', week: 'This Week', month: 'This Month', year: 'This Year' };
-
-function styleTabs() {
-  document.querySelectorAll('#periodTabs .ptab').forEach(b => {
-    const on = b.dataset.period === period;
-    b.className = 'ptab text-[11px] font-semibold rounded-full px-3 py-1 border ' +
-      (on ? 'text-amber-300 border-amber-400/60 bg-amber-400/10' : 'text-slate-400 border-slate-700 bg-[#1e293b] hover:text-amber-300');
-  });
-}
-
-function periodSince(p) {
-  const now = Date.now() / 1000;
-  if (p === 'day') return Math.floor(now - 86400);
-  if (p === 'week') return Math.floor(now - 7 * 86400);
-  if (p === 'month') return Math.floor(now - 30 * 86400);
-  return Math.floor(new Date(new Date().getFullYear(), 0, 1).getTime() / 1000);
-}
-
-async function sbRpc(fn, args) {
-  const r = await fetch(`${SUPA_URL}/rest/v1/rpc/${fn}`, {
+async function doSignIn() {
+  const err = document.getElementById('loginErr');
+  err.classList.add('hidden');
+  const r = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=password`, {
     method: 'POST',
-    headers: { apikey: ANON, Authorization: `Bearer ${session?.access_token ?? ANON}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(args),
+    headers: { apikey: ANON, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: document.getElementById('loginEmail').value.trim(),
+      password: document.getElementById('loginPass').value,
+    }),
   });
-  if (!r.ok) throw new Error(await r.text());
-  return r.json();
+  const d = await r.json();
+  if (!r.ok) { err.textContent = d.error_description ?? d.msg ?? 'sign in failed'; err.classList.remove('hidden'); return; }
+  session = {
+    access_token: d.access_token,
+    refresh_token: d.refresh_token,
+    expires_at: Math.floor(Date.now() / 1000) + (d.expires_in ?? 3600),
+    email: document.getElementById('loginEmail').value.trim(),
+  };
+  localStorage.setItem('sk_auth', JSON.stringify(session));
+  document.getElementById('loginOverlay').classList.add('hidden');
+  document.getElementById('signOutBtn').classList.remove('hidden');
+  boot().catch(showErr);
 }
 
-function finishBoard(scored, baseBy, suffix) {
-  members = scored.map(s => ({
-    ...(baseBy[s.user_id] ?? {}),
-    user_id: s.user_id,
-    current_name: s.name ?? baseBy[s.user_id]?.current_name ?? s.user_id,
-    msg_count: +s.msgs, likes_received: +s.likes_rec, likes_given: +s.likes_given,
-    left_count: +s.lefts, kick_count: +s.kicks, flags: +s.flags,
-    inactive_months: +s.inactive_months, points: +s.points,
-  })).sort((a, b) => b.points - a.points);
-  members.forEach((m, i) => { m.rank = i + 1; });
-  rankTotal = members.length;
-  memberByUid = {};
-  for (const m of members) memberByUid[m.user_id] = m;
-  const hidden = members.filter(m => m.points < 0).length;
-  members = members.filter(m => m.points >= 0);
-  const scoped = gid && period !== 'all';
-  const rules = '+1 msg · +20 like rec · +10 like given · −25 leave · −500 kick · −5 SK-flag' +
-    (scoped ? ` · since ${new Date(periodSince(period) * 1000).toLocaleDateString()}` : ' · −350 inactive mo');
-  document.getElementById('stats').textContent =
-    `${members.length} members · ${rules}` +
-    (hidden ? ` · ${hidden} below zero hidden` : '') + (suffix ? ` · ${suffix}` : '');
-  renderPodium();
-  renderRows();
-}
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doSignIn(); });
+});
 
-async function load(which) {
-  memberByUid = {};
-  const av = document.getElementById('groupAvatar');
-  document.getElementById('periodTabs').style.display = which === 'all' ? 'none' : 'flex';
-  if (which === 'all') {
-    gid = null;
-    const localOnly = new Set(groups.filter(g => g.local_only).map(g => g.group_id));
-    const globalGroups = groups.filter(g => !g.local_only);
-    const [allScoredRaw, rowsRaw] = await Promise.all([
-      cached('scores:all', 300000, () => sbAll('member_scores?select=*&order=points.desc')),
-      cached('members:all', 600000, () => sbAll('members?is_bot=eq.false&select=*&order=user_id.asc')),
-    ]);
-    const allScoredFlat = allScoredRaw.filter(s => !localOnly.has(s.group_id));
-    const rows = rowsRaw.filter(m => !localOnly.has(m.group_id));
-    const allScored = [allScoredFlat];
-    const baseBy = {};
-    for (const m of rows) {
-      const a = baseBy[m.user_id];
-      if (!a) { baseBy[m.user_id] = { ...m, names: [...(m.names ?? [])], groups: 1 }; continue; }
-      if ((m.last_ts ?? 0) >= (a.last_ts ?? 0)) { a.last_ts = m.last_ts; a.current_name = m.current_name; }
-      if (m.first_ts && (!a.first_ts || m.first_ts < a.first_ts)) a.first_ts = m.first_ts;
-      for (const n of m.names ?? []) if (!a.names.some(x => x.name === n.name)) a.names.push(n);
-      a.groups++;
+/* ── state ─────────────────────────────────────────────────────────── */
+let personMap = {};
+let persons   = [];
+
+/* ── aggregation ────────────────────────────────────────────────────── */
+function addNamesToSet(nameSet, currentName, namesArr) {
+  if (currentName) {
+    if (!nameSet.has(currentName)) nameSet.set(currentName, null);
+  }
+  for (const n of namesArr || []) {
+    if (!n || !n.name) continue;
+    const existing = nameSet.get(n.name);
+    if (existing === undefined) {
+      nameSet.set(n.name, n.first_used || null);
+    } else if (n.first_used && (!existing || n.first_used < existing)) {
+      nameSet.set(n.name, n.first_used);
     }
-    const agg = {};
-    for (const s of allScored.flat()) {
-      const a = agg[s.user_id] ?? (agg[s.user_id] = {
-        user_id: s.user_id, name: s.name, msgs: 0, likes_rec: 0, likes_given: 0,
-        lefts: 0, kicks: 0, flags: 0, inactive_months: 0, points: 0,
-      });
-      a.msgs += +s.msgs; a.likes_rec += +s.likes_rec; a.likes_given += +s.likes_given;
-      a.lefts += +s.lefts; a.kicks += +s.kicks; a.flags += +s.flags;
-      a.inactive_months += +s.inactive_months; a.points += +s.points;
-    }
-    totalMsgs = globalGroups.reduce((s, g) => s + +g.message_count, 0);
-    document.getElementById('groupName').textContent = 'All Groups — Global Leaderboard';
-    document.title = 'Global Leaderboard';
-    av.classList.add('hidden');
-    const note = localOnly.size ? `across ${globalGroups.length} groups (${localOnly.size} local-only excluded)` : `across ${globalGroups.length} groups`;
-    finishBoard(Object.values(agg), baseBy, note);
-  } else {
-    gid = which;
-    const g = groups.find(x => x.group_id === which) || groups[0];
-    totalMsgs = +g.message_count;
-    const plabel = period === 'all' ? '' : ` · ${PERIOD_LABEL[period]}`;
-    document.getElementById('groupName').textContent = `${g.group_name || which} — Leaderboard${plabel}`;
-    document.title = `Leaderboard — ${g.group_name}`;
-    if (g.group_avatar) { av.src = g.group_avatar; av.classList.remove('hidden'); } else av.classList.add('hidden');
-    const [scored, base] = await Promise.all([
-      period === 'all'
-        ? cached(`scores:${which}`, 300000, () => sbAll(`member_scores?group_id=eq.${which}&select=*&order=points.desc`))
-        : cached(`board:${which}:${period}`, 300000, () => sbRpc('leaderboard', {
-            gid: which,
-            since_ts: periodSince(period),
-            include_inactivity: false,
-          })),
-      cached(`members:${which}`, 600000, () => sbAll(`members?group_id=eq.${which}&is_bot=eq.false&select=*&order=msg_count.desc`)),
-    ]);
-    const baseBy = {};
-    for (const b of base) baseBy[b.user_id] = b;
-    finishBoard(period === 'all' ? scored : scored.filter(s => +s.msgs > 0 || +s.likes_given > 0 || +s.lefts > 0 || +s.kicks > 0 || +s.flags > 0), baseBy, '');
   }
 }
 
-function avatarCircle(m, size, ring) {
-  const name = m.current_name ?? '?';
-  return `<div class="${size} rounded-full flex items-center justify-center text-[#0f172a] font-bold font-display mx-auto ${ring}"
-    style="background:${nameColor(name)}">${esc((name[0] || '?').toUpperCase())}</div>`;
+function buildPersons(rawMembers, groupStats) {
+  const groupNameMap = {};
+  for (const g of groupStats) groupNameMap[g.group_id] = g.group_name;
+
+  personMap = {};
+
+  for (const m of rawMembers) {
+    const uid = m.user_id;
+    const msgs = +(m.msg_count || 0);
+    const likes = +(m.likes_received || 0);
+
+    if (!personMap[uid]) {
+      personMap[uid] = {
+        user_id:       uid,
+        is_bot:        !!m.is_bot,
+        total_msgs:    msgs,
+        total_likes:   likes,
+        earliest_first: m.first_ts || null,
+        latest_last:   m.last_ts   || null,
+        primary_name:  m.current_name || uid,
+        _primary_msgs: msgs,
+        nameSet:       new Map(),
+        groups:        [],
+      };
+    } else {
+      const p = personMap[uid];
+      p.is_bot       = p.is_bot || !!m.is_bot;
+      p.total_msgs  += msgs;
+      p.total_likes += likes;
+      if (m.first_ts != null && (p.earliest_first == null || m.first_ts < p.earliest_first)) p.earliest_first = m.first_ts;
+      if (m.last_ts  != null && (p.latest_last   == null || m.last_ts  > p.latest_last))    p.latest_last    = m.last_ts;
+      if (msgs > p._primary_msgs) { p.primary_name = m.current_name || uid; p._primary_msgs = msgs; }
+    }
+
+    addNamesToSet(personMap[uid].nameSet, m.current_name, m.names);
+
+    personMap[uid].groups.push({
+      group_id:      m.group_id,
+      group_name:    groupNameMap[m.group_id] || m.group_id,
+      role:          m.role || null,
+      member_no:     m.member_no,
+      msg_count:     msgs,
+      likes_received: likes,
+      first_ts:      m.first_ts || null,
+      last_ts:       m.last_ts  || null,
+    });
+  }
+
+  persons = Object.values(personMap);
+
+  for (const p of persons) {
+    p.nicknames = [...p.nameSet.entries()]
+      .sort((a, b) => {
+        if (!a[1] && !b[1]) return 0;
+        if (!a[1]) return 1;
+        if (!b[1]) return -1;
+        return a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : 0;
+      })
+      .map(([name, first_used]) => ({ name, first_used }));
+
+    p.searchTokens = [p.user_id.toLowerCase(), ...p.nicknames.map(n => n.name.toLowerCase())];
+
+    p.groups.sort((a, b) => b.msg_count - a.msg_count);
+
+    delete p.nameSet;
+    delete p._primary_msgs;
+  }
+
+  persons.sort((a, b) => b.total_msgs - a.total_msgs);
 }
 
-function renderPodium() {
-  const [first, second, third] = members;
-  const cell = (m, place, medal, ring, avSize, txtSize, lift) => m ? `
-    <div class="podium text-center ${lift}" onclick="openProfile('${esc(m.user_id)}')">
-      <div class="text-2xl mb-2">${medal}</div>
-      ${avatarCircle(m, avSize, ring)}
-      <div class="font-display font-bold ${txtSize} mt-2 truncate" style="color:${nameColor(m.current_name)}">${esc(m.current_name ?? m.user_id)}</div>
-      <div class="text-[10px] text-slate-500">member #${m.member_no ?? '—'}</div>
-      <div class="font-display font-bold text-amber-300 mt-1">${(+m.points).toLocaleString()}</div>
-      <div class="text-[10px] text-slate-500">points · ${(+m.msg_count).toLocaleString()} msgs · ♥ ${(+m.likes_received).toLocaleString()}</div>
-    </div>` : '<div></div>';
-  document.getElementById('podium').innerHTML =
-    cell(second, 2, '🥈', 'w-16 h-16 text-xl ring-4 ring-slate-400/50', 'text-sm', 'pb-2') +
-    cell(first, 1, '🥇', 'w-20 h-20 text-2xl ring-4 ring-amber-400/60', 'text-base', 'pb-8') +
-    cell(third, 3, '🥉', 'w-14 h-14 text-lg ring-4 ring-amber-700/50', 'text-sm', '');
+/* ── role helpers ───────────────────────────────────────────────────── */
+function topRole(groups) {
+  const roles = groups.map(g => g.role);
+  if (roles.includes('owner'))  return 'owner';
+  if (roles.includes('admin'))  return 'admin';
+  if (roles.some(r => r === 'member')) return 'member';
+  return null;
 }
 
-function renderRows() {
-  const top = members[0] ? Math.max(1, +members[0].points) : 1;
-  document.getElementById('rows').innerHTML = members.map((m, i) => {
-    const name = m.current_name ?? m.user_id;
-    const aliases = (m.names ?? []).length;
-    const share = Math.max(0.5, m.points / top * 100);
-    const rankColor = i === 0 ? '#fbbf24' : i === 1 ? '#cbd5e1' : i === 2 ? '#d97706' : '#64748b';
-    return `<div class="lbRow grid grid-cols-[3rem_1fr_auto] sm:grid-cols-[3rem_1fr_7rem_7rem_5.5rem_6.5rem_6.5rem] gap-2 items-center px-4 py-2.5 border-b border-slate-800/60"
-      onclick="openProfile('${esc(m.user_id)}')">
-      <div class="font-display font-bold text-[13px]" style="color:${rankColor}">${i + 1}</div>
-      <div class="flex items-center gap-2.5 min-w-0">
-        <span class="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-[11px] font-bold font-display text-[#0f172a]" style="background:${nameColor(name)}">${esc((name[0] || '?').toUpperCase())}</span>
-        <span class="flex items-center gap-1.5 min-w-0">
-          <span class="text-[13px] font-semibold truncate" style="color:${nameColor(name)}">${esc(name)}</span>
-          <span class="text-[9px] text-slate-600 flex-shrink-0">#${m.member_no ?? '—'}</span>
-          ${m.is_bot ? '<span class="text-[8px] font-bold text-indigo-300 bg-indigo-400/10 border border-indigo-400/25 rounded-full px-1.5">BOT</span>' : ''}
-          ${m.role === 'owner' || m.role === 'admin' ? `<span class="text-[8px] font-bold ${m.role === 'owner' ? 'text-amber-300 bg-amber-400/10 border-amber-400/25' : 'text-indigo-300 bg-indigo-400/10 border-indigo-400/25'} border rounded-full px-1.5 flex-shrink-0">${m.role.toUpperCase()}</span>` : ''}
-          ${aliases > 1 ? `<span class="text-[9px] text-slate-600 flex-shrink-0">${aliases} names</span>` : ''}
-          ${(m.groups ?? 0) > 1 ? `<span class="text-[9px] text-emerald-400/80 flex-shrink-0">${m.groups} groups</span>` : ''}
-        </span>
+function roleBadge(role, is_bot) {
+  if (is_bot)            return '<span style="font-size:10px;font-weight:600;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:1px 5px">bot</span>';
+  if (role === 'owner')  return '<span style="font-size:10px;font-weight:600;color:#fcd34d;border:1px solid rgba(251,191,36,.4);background:rgba(251,191,36,.1);border-radius:4px;padding:1px 5px">owner</span>';
+  if (role === 'admin')  return '<span style="font-size:10px;font-weight:600;color:#a5b4fc;border:1px solid rgba(129,140,248,.25);background:rgba(129,140,248,.1);border-radius:4px;padding:1px 5px">admin</span>';
+  if (role === 'member') return '<span style="font-size:10px;font-weight:600;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:1px 5px">member</span>';
+  return '<span style="font-size:10px;font-weight:600;color:#f87171;border:1px solid rgba(251,113,133,.2);background:rgba(251,113,133,.1);border-radius:4px;padding:1px 5px">ex-member</span>';
+}
+
+function avatarCircle(name, size) {
+  const s = size || '2.25rem';
+  const initial = esc(((name || '?')[0] || '?').toUpperCase());
+  return `<div style="width:${s};height:${s};border-radius:9999px;display:flex;align-items:center;justify-content:center;background:${nameColor(name)};color:#0f172a;font-weight:700;font-family:'Bricolage Grotesque',sans-serif;flex-shrink:0">${initial}</div>`;
+}
+
+/* ── directory rendering ────────────────────────────────────────────── */
+function rowHtml(p) {
+  const role = topRole(p.groups);
+  const gc   = p.groups.length;
+  const uid  = esc(p.user_id);
+  const name = esc(p.primary_name || p.user_id);
+  return `<div class="mRow border-b border-slate-800/60 last:border-0" onclick="openDetail('${uid}')">
+    <div class="mRow-grid px-4 py-3">
+      ${avatarCircle(p.primary_name)}
+      <div class="min-w-0">
+        <div class="font-medium text-sm truncate" style="color:${nameColor(p.primary_name)}">${name}</div>
+        <div class="text-[11px] text-slate-500 font-mono truncate">${uid}</div>
       </div>
-      <div class="text-right">
-        <span class="text-[13px] font-bold text-amber-300">${(+m.points).toLocaleString()}</span>
-        <span class="block h-1 w-20 ml-auto rounded-full bg-slate-800/80 mt-1 overflow-hidden"><span class="block h-1 rounded-full" style="width:${share}%;background:linear-gradient(90deg,#f59e0b,#fbbf24)"></span></span>
-      </div>
-      <div class="hidden sm:block text-right text-[12px] text-slate-300">${(+m.msg_count).toLocaleString()}</div>
-      <div class="hidden sm:block text-right text-[12px] text-rose-300/90">${(+m.likes_received).toLocaleString()}</div>
-      <div class="hidden sm:block text-right text-[11px] text-slate-500">${fmtD(m.first_ts)}</div>
-      <div class="hidden sm:block text-right text-[11px] text-slate-500">${fmtD(m.last_ts)}</div>
-    </div>`;
-  }).join('');
+      <div class="col-sm text-center text-[12px] text-slate-400">${gc}&thinsp;grp${gc !== 1 ? 's' : ''}</div>
+      <div class="col-sm text-right text-[12px] text-slate-300">${p.total_msgs.toLocaleString()}</div>
+      <div class="col-sm text-right text-[12px] text-slate-400">&hearts;&thinsp;${p.total_likes.toLocaleString()}</div>
+      <div class="col-sm text-right">${roleBadge(role, p.is_bot)}</div>
+    </div>
+  </div>`;
 }
 
-async function openProfile(uid) {
-  const mb = memberByUid[uid];
-  if (!mb) return;
-  const evs = await sb(`events?${gid ? `group_id=eq.${gid}&` : ''}subject_uid=eq.${uid}&select=*&order=ts.asc&limit=300`);
-  const name = mb.current_name ?? 'Unknown';
-  const dt = ts => new Date(ts * 1000).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) +
-    ' · ' + new Date(ts * 1000).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
-  const evColor = { added: '#34d399', rejoined: '#34d399', removed: '#f87171', left: '#94a3b8', renamed: '#fbbf24' };
-  const evText = e => {
-    if (e.type === 'added') return `added to the group${e.actor_name ? ' by ' + e.actor_name : ''}`;
-    if (e.type === 'removed') return `removed from the group${e.actor_name ? ' by ' + e.actor_name : ''}`;
-    if (e.type === 'left') return 'left the group';
-    if (e.type === 'rejoined') return 'rejoined the group';
-    if (e.type === 'renamed') return `changed nickname ${e.detail ?? ''}`;
-    return e.type;
-  };
-  document.getElementById('profileCard').innerHTML = `
-    <div class="p-5">
-      <div class="flex items-center gap-4">
-        <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-[#0f172a] text-xl font-bold font-display" style="background:${nameColor(name)}">${esc((name[0] || '?').toUpperCase())}</div>
-        <div class="min-w-0 flex-1">
-          <div class="font-display text-lg font-bold" style="color:${nameColor(name)}">${esc(name)}
-            ${mb.role === 'owner' || mb.role === 'admin' ? `<span class="text-[9px] font-bold ${mb.role === 'owner' ? 'text-amber-300 bg-amber-400/10 border-amber-400/25' : 'text-indigo-300 bg-indigo-400/10 border-indigo-400/25'} border rounded-full px-2 py-px ml-1">${mb.role.toUpperCase()}</span>` : ''}
-          </div>
-          <div class="text-[11px] text-slate-500 font-medium">${mb.member_no ? `member #${mb.member_no}` : 'bot'} · id ${esc(uid)} · <span class="text-amber-300/90 font-semibold">${mb.rank ? `🏆 #${mb.rank} of ${rankTotal}` : '🏆 unranked'}</span></div>
+function renderDirectory(filtered) {
+  const showBots  = document.getElementById('botToggle').checked;
+  const denom     = persons.filter(p => showBots || !p.is_bot).length;
+  const cap       = 300;
+  const total     = filtered.length;
+  const toShow    = filtered.slice(0, cap);
+
+  document.getElementById('resultCount').textContent =
+    `${total.toLocaleString()} of ${denom.toLocaleString()} member${denom !== 1 ? 's' : ''}`;
+
+  const list = document.getElementById('directoryList');
+
+  if (!toShow.length) {
+    list.innerHTML = '<div style="padding:2.5rem 1rem;text-align:center;color:#475569;font-size:.875rem">No members match your search.</div>';
+    return;
+  }
+
+  const overflow = total > cap
+    ? `<div style="padding:.75rem 1rem;text-align:center;font-size:11px;color:#475569;border-top:1px solid rgba(30,41,59,.6)">&hellip;and ${(total - cap).toLocaleString()} more &mdash; refine your search to narrow results</div>`
+    : '';
+
+  list.innerHTML = toShow.map(rowHtml).join('') + overflow;
+}
+
+function applyFilter() {
+  const q        = document.getElementById('searchInput').value.trim().toLowerCase();
+  const showBots = document.getElementById('botToggle').checked;
+
+  const filtered = persons.filter(p => {
+    if (!showBots && p.is_bot) return false;
+    if (!q) return true;
+    return p.searchTokens.some(t => t.includes(q));
+  });
+
+  renderDirectory(filtered);
+}
+
+/* ── boot ───────────────────────────────────────────────────────────── */
+function showErr(e) {
+  document.getElementById('loadingState').classList.add('hidden');
+  const el = document.getElementById('errorState');
+  el.textContent = 'Failed to load: ' + (e.message || e);
+  el.classList.remove('hidden');
+}
+
+async function boot() {
+  document.getElementById('loadingState').classList.remove('hidden');
+  document.getElementById('content').classList.add('hidden');
+  document.getElementById('errorState').classList.add('hidden');
+
+  try {
+    const [rawMembers, groupStats] = await Promise.all([
+      sbAll('members?select=group_id,user_id,member_no,current_name,role,is_bot,msg_count,likes_received,first_ts,last_ts,names&order=msg_count.desc'),
+      sb('group_stats?select=group_id,group_name'),
+    ]);
+
+    buildPersons(rawMembers, groupStats);
+
+    document.getElementById('loadingState').classList.add('hidden');
+    document.getElementById('content').classList.remove('hidden');
+
+    const total = persons.length;
+    const bots  = persons.filter(p => p.is_bot).length;
+    document.getElementById('headerStats').textContent =
+      `${total.toLocaleString()} unique member${total !== 1 ? 's' : ''} across all groups` +
+      (bots ? ` (${bots} bot${bots !== 1 ? 's' : ''})` : '');
+
+    applyFilter();
+  } catch (e) {
+    showErr(e);
+  }
+}
+
+/* ── detail modal ───────────────────────────────────────────────────── */
+function fmtEventLine(ev) {
+  switch (ev.type) {
+    case 'added':
+      return 'Added to group' + (ev.actor_name ? ' by <span style="color:#cbd5e1">' + esc(ev.actor_name) + '</span>' : '');
+    case 'removed':
+      return 'Removed' + (ev.actor_name ? ' by <span style="color:#f87171">' + esc(ev.actor_name) + '</span>' : '');
+    case 'left':
+      return '<span style="color:rgba(253,164,175,.8)">Left the group</span>';
+    case 'rejoined':
+      return '<span style="color:rgba(110,231,183,.9)">Rejoined</span>';
+    case 'renamed':
+      return 'Renamed to <span style="color:#fcd34d">' + esc(ev.subject_name) + '</span>' +
+        (ev.detail ? ' <span style="color:#475569">(was ' + esc(ev.detail) + ')</span>' : '');
+    default:
+      return esc(ev.type) + (ev.detail ? ': ' + esc(ev.detail) : '');
+  }
+}
+
+let _lastDetailUid = null;
+
+async function openDetail(uid) {
+  const p = personMap[uid];
+  if (!p) return;
+  _lastDetailUid = uid;
+
+  const overlay = document.getElementById('detailOverlay');
+  const card    = document.getElementById('detailCard');
+  overlay.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+
+  const role = topRole(p.groups);
+
+  const nicknamesHtml = p.nicknames.length
+    ? `<div class="mb-5">
+        <div class="text-[10px] font-bold tracking-[.15em] text-slate-500 font-display mb-2">NAMES USED</div>
+        <div class="flex flex-wrap gap-1.5">
+          ${p.nicknames.map(n =>
+            `<span style="font-size:11px;background:rgba(30,41,59,.5);border:1px solid #334155;border-radius:4px;padding:2px 7px;color:#cbd5e1">${esc(n.name)}${n.first_used ? '<span style="color:#475569;margin-left:4px">' + esc(String(n.first_used).slice(0, 10)) + '</span>' : ''}</span>`
+          ).join('')}
         </div>
-        <button onclick="closeProfile()" class="text-slate-500 hover:text-white text-xl font-bold px-1">×</button>
-      </div>
-      <div class="grid grid-cols-3 gap-2 mt-4">
-        <div class="bg-[#0f172a] rounded-xl p-2.5 text-center"><div class="font-display font-bold text-amber-300">${(+(mb.points ?? 0)).toLocaleString()}</div><div class="text-[10px] text-slate-500">points</div></div>
-        <div class="bg-[#0f172a] rounded-xl p-2.5 text-center"><div class="font-display font-bold text-slate-100">${(+mb.msg_count).toLocaleString()}</div><div class="text-[10px] text-slate-500">messages</div></div>
-        <div class="bg-[#0f172a] rounded-xl p-2.5 text-center"><div class="font-display font-bold text-rose-300">♥ ${(+mb.likes_received).toLocaleString()}</div><div class="text-[10px] text-slate-500">likes received</div></div>
-      </div>
-      <div class="grid grid-cols-2 gap-2 mt-2">
-        <div class="bg-[#0f172a] rounded-xl p-2.5 text-center"><div class="font-display font-bold text-emerald-300 text-[13px]">${fmtD((evs.find(e => e.type === 'added') || {}).ts ?? mb.first_ts)}</div><div class="text-[10px] text-slate-500">date joined</div></div>
-        <div class="bg-[#0f172a] rounded-xl p-2.5 text-center"><div class="font-display font-bold text-slate-100 text-[13px]">${fmtD(mb.last_ts)}</div><div class="text-[10px] text-slate-500">last active</div></div>
-      </div>
-      <div class="text-[10px] text-slate-600 text-center mt-2">${(+mb.msg_count).toLocaleString()} msgs ×1 · ${(+mb.likes_received).toLocaleString()} likes rec ×20 · ${mb.likes_given ?? 0} given ×10 · ${mb.left_count ?? 0} left ×−25 · ${mb.kick_count ?? 0} kicked ×−500 · ${mb.flags ?? 0} deleted ×−5 · ${mb.inactive_months ?? 0} inactive mo ×−350</div>
-      ${(mb.names ?? []).length ? `<div class="mt-4">
-        <div class="font-display text-[11px] font-bold tracking-[.15em] text-slate-500 mb-2">NICKNAMES</div>
-        <div class="flex flex-wrap gap-1.5">${(mb.names ?? []).map(n => `<span class="text-[11px] font-medium rounded-full px-2.5 py-0.5 bg-[#0f172a] border border-slate-700" style="color:${nameColor(n.name)}">${esc(n.name)}</span>`).join('')}</div>
-      </div>` : ''}
-      <div class="mt-4">
-        <div class="font-display text-[11px] font-bold tracking-[.15em] text-slate-500 mb-2">HISTORY</div>
-        <div class="max-h-64 overflow-y-auto pr-1">
-          ${evs.map(e => `<div class="flex gap-2.5 items-start py-1">
-            <span class="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style="background:${evColor[e.type] ?? '#64748b'}"></span>
-            <div class="min-w-0"><div class="text-[12px] text-slate-300 break-words">${esc(evText(e))}</div><div class="text-[10px] text-slate-600">${dt(e.ts)}</div></div>
-          </div>`).join('') || '<div class="text-xs text-slate-600 italic">no recorded events</div>'}
-        </div>
-      </div>
-      <div class="mt-5">
-        <a href="index.html" class="block text-center bg-amber-400 hover:bg-amber-300 text-[#0f172a] text-sm font-semibold py-2 rounded-xl">view their messages in the archive</a>
+      </div>`
+    : '';
+
+  const groupsTableHtml = `
+    <div class="mb-5">
+      <div class="text-[10px] font-bold tracking-[.15em] text-slate-500 font-display mb-2">GROUP BREAKDOWN</div>
+      <div class="overflow-x-auto">
+        <table class="detail-table">
+          <thead><tr>
+            <th>GROUP</th>
+            <th style="text-align:center">ROLE</th>
+            <th style="text-align:center">MEMBER #</th>
+            <th style="text-align:right">MSGS</th>
+            <th style="text-align:right">LIKES</th>
+            <th style="text-align:right">LAST ACTIVE</th>
+          </tr></thead>
+          <tbody>
+            ${p.groups.map(g => `<tr>
+              <td style="padding-right:.75rem;color:#e2e8f0;white-space:nowrap">${esc(g.group_name)}</td>
+              <td style="text-align:center;white-space:nowrap">${roleBadge(g.role, false)}</td>
+              <td style="text-align:center;color:#64748b">${g.member_no != null ? esc(String(g.member_no)) : '&mdash;'}</td>
+              <td style="text-align:right;color:#cbd5e1">${g.msg_count.toLocaleString()}</td>
+              <td style="text-align:right;color:#94a3b8">&hearts;&thinsp;${g.likes_received.toLocaleString()}</td>
+              <td style="text-align:right;color:#64748b;white-space:nowrap">${fmtD(g.last_ts)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
       </div>
     </div>`;
-  document.getElementById('profileOverlay').classList.remove('hidden');
-}
-function closeProfile() { document.getElementById('profileOverlay').classList.add('hidden'); }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeProfile(); });
 
-document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doSignIn(); });
+  card.innerHTML = `
+    <div class="flex items-start justify-between gap-3 mb-5">
+      <div class="flex items-center gap-3 min-w-0">
+        ${avatarCircle(p.primary_name, '3.5rem')}
+        <div class="min-w-0">
+          <div id="detailName" class="font-display font-bold text-xl leading-none" style="color:${nameColor(p.primary_name)}">${esc(p.primary_name || p.user_id)}</div>
+          <div class="font-mono text-[12px] text-slate-500 mt-1 truncate">${esc(p.user_id)}</div>
+          <div class="mt-1">${roleBadge(role, p.is_bot)}</div>
+        </div>
+      </div>
+      <button onclick="closeDetail()" aria-label="Close"
+        style="color:#64748b;font-size:1.25rem;line-height:1;padding:.25rem;cursor:pointer;flex-shrink:0;background:none;border:none"
+        onmouseover="this.style.color='#f8fafc'" onmouseout="this.style.color='#64748b'">&#x2715;</button>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 mb-5">
+      <div class="bg-slate-800/40 rounded-xl px-4 py-3">
+        <div class="text-[10px] font-bold tracking-[.15em] text-slate-500 font-display mb-1">MESSAGES</div>
+        <div class="font-display font-bold text-2xl text-white">${p.total_msgs.toLocaleString()}</div>
+      </div>
+      <div class="bg-slate-800/40 rounded-xl px-4 py-3">
+        <div class="text-[10px] font-bold tracking-[.15em] text-slate-500 font-display mb-1">LIKES RECEIVED</div>
+        <div class="font-display font-bold text-2xl text-white">&hearts; ${p.total_likes.toLocaleString()}</div>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap gap-4 mb-5 text-[12px]">
+      <div><span class="text-slate-500">First seen:</span> <span class="text-slate-300">${fmtD(p.earliest_first)}</span></div>
+      <div><span class="text-slate-500">Last active:</span> <span class="text-slate-300">${fmtD(p.latest_last)}</span></div>
+      <div><span class="text-slate-500">Groups:</span> <span class="text-slate-300">${p.groups.length}</span></div>
+    </div>
+
+    ${nicknamesHtml}
+    ${groupsTableHtml}
+
+    <div>
+      <div class="text-[10px] font-bold tracking-[.15em] text-slate-500 font-display mb-2">TIMELINE</div>
+      <div id="eventsContainer" class="text-[12px] text-slate-500 italic">Loading history&hellip;</div>
+    </div>
+  `;
+
+  /* focus close button for keyboard users */
+  card.querySelector('button[aria-label="Close"]').focus();
+
+  /* fetch events */
+  try {
+    const events = await sb(
+      'events?subject_uid=eq.' + encodeURIComponent(uid) +
+      '&select=ts,type,subject_name,actor_name,detail&order=ts.asc&limit=200'
+    );
+    if (_lastDetailUid !== uid) return; /* user navigated away */
+    const ec = document.getElementById('eventsContainer');
+    if (!ec) return;
+    if (!events.length) {
+      ec.innerHTML = '<span style="color:#334155">No events recorded.</span>';
+      return;
+    }
+    ec.classList.remove('italic');
+    ec.innerHTML = '<ul class="space-y-1">' +
+      events.map(ev =>
+        `<li style="display:flex;gap:.5rem;align-items:baseline">
+          <span style="color:#334155;font-family:monospace;font-size:11px;white-space:nowrap;flex-shrink:0">${fmtD(ev.ts)}</span>
+          <span style="color:#94a3b8">${fmtEventLine(ev)}</span>
+        </li>`
+      ).join('') +
+      '</ul>';
+  } catch (e) {
+    const ec = document.getElementById('eventsContainer');
+    if (ec) ec.innerHTML = '<span style="color:#f87171">Failed to load events: ' + esc(e.message) + '</span>';
+  }
+}
+
+function closeDetail() {
+  _lastDetailUid = null;
+  document.getElementById('detailOverlay').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    const overlay = document.getElementById('detailOverlay');
+    if (overlay && !overlay.classList.contains('hidden')) closeDetail();
+  }
+});
+
+/* ── init ───────────────────────────────────────────────────────────── */
 (async () => {
-  if (await ensureAuth()) boot().catch(e => { document.getElementById('stats').textContent = 'failed to load: ' + e.message; });
-  else document.getElementById('loginOverlay').classList.remove('hidden');
+  const authed = await ensureAuth();
+  if (!authed) {
+    document.getElementById('loginOverlay').classList.remove('hidden');
+    document.getElementById('loadingState').classList.add('hidden');
+    return;
+  }
+  document.getElementById('signOutBtn').classList.remove('hidden');
+  await boot();
 })();
 </script>
 </body>
