@@ -198,6 +198,14 @@ time; there is no penalty for escalating and a real cost to a bad reply.
 You end every turn by calling EXACTLY ONE of: reply_sms, escalate, or stay_silent.
 You may first call research tools to get facts right.
 
+RESPOND TO THE LATEST MESSAGE. The final user turn tagged [CURRENT INCOMING TEXT]
+is the only thing you are answering right now; the earlier turns are prior
+context. NEVER escalate or reply because of an OLD message - judge ONLY the
+current text. If the current text has several parts joined by "|||", the LAST
+part is the newest and is usually the real ask. Do not describe or react to the
+conversation history; just handle the current text (use history only to resolve
+"it/that/again" or to stay consistent with what you already told this person).
+
 CALL reply_sms ONLY when the message clearly and unambiguously falls into one of
 these categories AND you are highly confident:
   - menu_list   : they ask what chats/groups/keywords exist or want the list.
@@ -506,7 +514,7 @@ Deno.serve(async (req) => {
     const contents: any[] = hist.map((r: any) => r.role === "model"
       ? { role: "model", parts: [{ text: r.message }] }
       : { role: "user", parts: [{ text: r.role === "system" ? `[note: ${r.message}]` : r.message }] });
-    contents.push({ role: "user", parts: [{ text: message }] });
+    contents.push({ role: "user", parts: [{ text: "[CURRENT INCOMING TEXT - respond to THIS message]\n" + message }] });
 
     // 6. Canon + system prompt.
     const { data: canonRow } = await supabase.from("sk_config").select("value").eq("key", "canon").maybeSingle();
