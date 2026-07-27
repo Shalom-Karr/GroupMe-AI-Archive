@@ -341,7 +341,7 @@ async function runVoiceTool(supabase: any, callerPhone: string, name: string, ar
     const query = String(args.query ?? "").trim();
     if (!query) return { error: "query required" };
     try {
-      const models = (Deno.env.get("WEB_SEARCH_MODELS") ?? "gemini-2.0-flash,gemini-flash-latest,gemini-2.5-flash-lite")
+      const models = (Deno.env.get("WEB_SEARCH_MODELS") ?? "gemini-3.6-flash,gemini-3.5-flash,gemini-3.1-flash-lite,gemini-3-flash-preview")
         .split(",").map((m) => m.trim()).filter(Boolean);
       let lastStatus = 0;
       for (const model of models) {
