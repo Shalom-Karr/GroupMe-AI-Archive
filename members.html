@@ -222,6 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ── state ─────────────────────────────────────────────────────────── */
 let personMap = {};
 let persons   = [];
+let groupNameMap = {};
 
 /* ── aggregation ────────────────────────────────────────────────────── */
 function addNamesToSet(nameSet, currentName, namesArr) {
@@ -240,7 +241,7 @@ function addNamesToSet(nameSet, currentName, namesArr) {
 }
 
 function buildPersons(rawMembers, groupStats) {
-  const groupNameMap = {};
+  groupNameMap = {};
   for (const g of groupStats) groupNameMap[g.group_id] = g.group_name;
 
   personMap = {};
@@ -429,20 +430,23 @@ async function boot() {
 
 /* ── detail modal ───────────────────────────────────────────────────── */
 function fmtEventLine(ev) {
+  const grpName = groupNameMap[ev.group_id] || ev.group_id || '';
+  const g = grpName ? '<span style="color:#e2e8f0">' + esc(grpName) + '</span>' : 'the group';
+  const tag = grpName ? ' <span style="color:#64748b">· ' + esc(grpName) + '</span>' : '';
   switch (ev.type) {
     case 'added':
-      return 'Added to group' + (ev.actor_name ? ' by <span style="color:#cbd5e1">' + esc(ev.actor_name) + '</span>' : '');
+      return 'Added to ' + g + (ev.actor_name ? ' by <span style="color:#cbd5e1">' + esc(ev.actor_name) + '</span>' : '');
     case 'removed':
-      return 'Removed' + (ev.actor_name ? ' by <span style="color:#f87171">' + esc(ev.actor_name) + '</span>' : '');
+      return '<span style="color:rgba(253,164,175,.9)">Removed from</span> ' + g + (ev.actor_name ? ' by <span style="color:#f87171">' + esc(ev.actor_name) + '</span>' : '');
     case 'left':
-      return '<span style="color:rgba(253,164,175,.8)">Left the group</span>';
+      return '<span style="color:rgba(253,164,175,.8)">Left</span> ' + g;
     case 'rejoined':
-      return '<span style="color:rgba(110,231,183,.9)">Rejoined</span>';
+      return '<span style="color:rgba(110,231,183,.9)">Rejoined</span> ' + g;
     case 'renamed':
       return 'Renamed to <span style="color:#fcd34d">' + esc(ev.subject_name) + '</span>' +
-        (ev.detail ? ' <span style="color:#475569">(was ' + esc(ev.detail) + ')</span>' : '');
+        (ev.detail ? ' <span style="color:#475569">(was ' + esc(ev.detail) + ')</span>' : '') + tag;
     default:
-      return esc(ev.type) + (ev.detail ? ': ' + esc(ev.detail) : '');
+      return esc(ev.type) + (ev.detail ? ': ' + esc(ev.detail) : '') + tag;
   }
 }
 
@@ -546,7 +550,7 @@ async function openDetail(uid) {
   try {
     const events = await sb(
       'events?subject_uid=eq.' + encodeURIComponent(uid) +
-      '&select=ts,type,subject_name,actor_name,detail&order=ts.asc&limit=200'
+      '&select=ts,type,group_id,subject_name,actor_name,detail&order=ts.asc&limit=200'
     );
     if (_lastDetailUid !== uid) return; /* user navigated away */
     const ec = document.getElementById('eventsContainer');
