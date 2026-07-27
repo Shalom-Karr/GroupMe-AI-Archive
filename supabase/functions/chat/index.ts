@@ -94,12 +94,16 @@ const TOOLS = [{
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
+  let supabase: any;
+  let group_id = "";
   try {
-    const { group_id, messages, global: isGlobal, admin_room: adminRoom, style, asker, asker_uid, source, context } = await req.json();
+    const body = await req.json();
+    group_id = body.group_id ?? "";
+    const { messages, global: isGlobal, admin_room: adminRoom, style, asker, asker_uid, source, context } = body;
     if (!group_id || !messages?.length) {
       return Response.json({ error: "group_id and messages required" }, { status: 400, headers: CORS });
     }
-    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const useGlobal = !!isGlobal || !!adminRoom;
     const question = String(messages[messages.length - 1]?.text ?? "");
     const logQA = (answer: string, model: string) => {
@@ -166,6 +170,13 @@ Deno.serve(async (req) => {
     logQA(answer, finalModel);
     return Response.json({ answer, tools_used: toolsUsed, model: finalModel }, { headers: CORS });
   } catch (e) {
+    if (String(e).includes("rate-limited") && supabase) {
+      supabase.from("health_events").insert({
+        type: "ai_exhausted", severity: "error",
+        group_id: group_id || null,
+        detail: String(e).slice(0, 200),
+      }).then(() => {}, () => {});
+    }
     return Response.json({ error: String(e) }, { status: 500, headers: CORS });
   }
 });

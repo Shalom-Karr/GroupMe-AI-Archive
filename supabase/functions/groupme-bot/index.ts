@@ -139,7 +139,7 @@ Deno.serve(async (req) => {
   // Ack GroupMe immediately (it redelivers slow callbacks -> duplicate posts), answer in background.
   (globalThis as any).EdgeRuntime?.waitUntil?.((async () => {
     const reply = await buildReply(reg, gid, text, isAdminGroup, asker, askerUid, body);
-    if (reply) await post(botId, reply);
+    if (reply) await post(reg, botId, reply, gid);
   })());
   return Response.json({ ok: true, queued: true });
 });
@@ -229,14 +229,21 @@ function chunkText(text: string, max = 900): string[] {
   return chunks;
 }
 
-async function post(botId: string, text: string) {
+async function post(reg: any, botId: string, text: string, gid?: string | null) {
   for (const c of chunkText(text)) {
-    await fetch("https://api.groupme.com/v3/bots/post", {
+    const r = await fetch("https://api.groupme.com/v3/bots/post", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ bot_id: botId, text: c }),
     });
-    await new Promise((r) => setTimeout(r, 400));
+    if (!r.ok) {
+      reg.from("health_events").insert({
+        type: "bot_post_failed", severity: "error",
+        group_id: gid ?? null,
+        detail: `bot ${botId} -> HTTP ${r.status}`,
+      }).then(() => {}, () => {});
+    }
+    await new Promise((res) => setTimeout(res, 400));
   }
 }
 

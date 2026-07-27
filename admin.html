@@ -101,6 +101,14 @@
 
   <div class="mt-6 bg-[#1e293b66] border border-slate-800 rounded-2xl p-5">
     <div class="flex items-center justify-between mb-3">
+      <div class="font-display text-sm font-bold tracking-[.15em] text-slate-400">ISSUES &amp; HEALTH</div>
+      <button onclick="loadHealth()" class="text-[12px] font-semibold text-slate-400 border border-slate-700 rounded-full px-4 py-1.5 hover:text-white">⟳ refresh</button>
+    </div>
+    <div id="healthPanel" class="text-sm text-slate-500">loading…</div>
+  </div>
+
+  <div class="mt-6 bg-[#1e293b66] border border-slate-800 rounded-2xl p-5">
+    <div class="flex items-center justify-between mb-3">
       <div class="font-display text-sm font-bold tracking-[.15em] text-slate-400">AI QUESTIONS</div>
       <button onclick="loadLog()" class="text-[12px] font-semibold text-slate-400 border border-slate-700 rounded-full px-4 py-1.5 hover:text-white">⟳ refresh</button>
     </div>
@@ -160,6 +168,7 @@ async function showAdmin() {
   document.getElementById('loginOverlay').classList.add('hidden');
   document.getElementById('signOutBtn').classList.remove('hidden');
   loadGroups();
+  loadHealth();
   try {
     const r = await fetch(`${SUPA_URL}/functions/v1/add-group?page=1`, { headers: await authHeaders() });
     const d = await r.json();
@@ -222,6 +231,72 @@ async function removeAdmin(gid) {
     body: JSON.stringify({ action: 'set_admin', group_id: gid, admin: false }),
   });
   loadAdminGroups();
+}
+
+async function loadHealth() {
+  const box = document.getElementById('healthPanel');
+  try {
+    const r = await fetch(`${SUPA_URL}/functions/v1/add-group?health=1`, { headers: await authHeaders() });
+    const d = await r.json();
+    if (!r.ok || d.error) throw new Error(d.error ?? r.status);
+    renderHealth(d);
+  } catch (e) {
+    box.textContent = 'could not load health data: ' + e.message;
+  }
+}
+
+function renderHealth(data) {
+  const box = document.getElementById('healthPanel');
+  const { events = [], no_bot_groups = [], model_fallbacks = [], current_model } = data;
+  const primaryModel = 'gemini-3.1-flash-lite';
+  const hasFallback = current_model !== null && current_model !== primaryModel;
+  const hasFallbacks7d = model_fallbacks.length > 0;
+  const hasIssues = events.length || no_bot_groups.length || hasFallback || hasFallbacks7d;
+  const issueCount = events.length + no_bot_groups.length + (hasFallback || hasFallbacks7d ? 1 : 0);
+
+  let html = hasIssues
+    ? `<div class="text-amber-300 font-semibold text-[13px] mb-3">⚠ ${issueCount} issue${issueCount === 1 ? '' : 's'} detected</div>`
+    : `<div class="text-emerald-300 font-semibold text-[13px]">✓ No issues detected</div>`;
+
+  if (!hasIssues) { box.innerHTML = html; return; }
+
+  if (hasFallback || hasFallbacks7d) {
+    const fallbackSummary = model_fallbacks.map(f => `${esc(f.model)} ×${f.count}`).join(', ');
+    html += `<div class="mb-3 p-3 rounded-xl bg-amber-400/10 border border-amber-400/40">
+      <div class="text-amber-300 font-semibold text-[13px] mb-1">⚠ AI model fallback detected</div>
+      ${hasFallback ? `<div class="text-amber-100 text-[12px]">Currently running on <span class="font-mono font-semibold">${esc(current_model)}</span> — not the primary Gemini model.</div>` : ''}
+      ${hasFallbacks7d ? `<div class="text-amber-300/80 text-[12px] mt-0.5">Fell back to ${esc(fallbackSummary)} in the last 7 days — Gemini limits likely being hit.</div>` : ''}
+    </div>`;
+  }
+
+  if (no_bot_groups.length) {
+    html += `<div class="mb-3">
+      <div class="text-[11px] font-bold tracking-[.15em] text-slate-500 mb-1.5">GROUPS WITHOUT A BOT</div>
+      <div class="space-y-0.5">
+        ${no_bot_groups.map(g => `<div class="text-[12px] text-slate-300">${esc(g.group_name ?? g.group_id)} <span class="text-slate-600">${esc(g.group_id)}</span></div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  if (events.length) {
+    html += `<div>
+      <div class="text-[11px] font-bold tracking-[.15em] text-slate-500 mb-1.5">RECENT EVENTS (${events.length})</div>
+      <div class="space-y-1">
+        ${events.slice(0, 20).map(ev => {
+          const color = ev.severity === 'error' ? 'text-rose-300' : ev.severity === 'warn' ? 'text-amber-300' : 'text-slate-400';
+          const bg = ev.severity === 'error' ? 'bg-rose-400/10 border-rose-400/20' : ev.severity === 'warn' ? 'bg-amber-400/10 border-amber-400/25' : 'bg-slate-800/40 border-slate-700/50';
+          const when = new Date(ev.ts).toLocaleString();
+          return `<div class="flex gap-2 items-start px-2.5 py-1.5 rounded-lg border ${bg}">
+            <span class="${color} text-[11px] font-semibold flex-shrink-0">${esc(ev.type)}</span>
+            <span class="min-w-0 flex-1 text-[11px] text-slate-400 truncate">${ev.group_id ? esc(ev.group_id) + ' · ' : ''}${esc(ev.detail ?? '')}</span>
+            <span class="text-[10px] text-slate-600 flex-shrink-0">${esc(when)}</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }
+
+  box.innerHTML = html;
 }
 
 async function loadLog() {

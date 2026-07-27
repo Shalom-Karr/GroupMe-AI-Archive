@@ -101,6 +101,36 @@ Deno.serve(async (req) => {
     return json({ logs: (logs ?? []).map((l: any) => ({ ...l, group_name: names[l.group_id] ?? l.group_id })) });
   }
 
+  if (req.method === "GET" && url.searchParams.get("health")) {
+    const primaryModel = "gemini-3.1-flash-lite";
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const [{ data: events }, { data: allGroups }, { data: allBots }, { data: fallbackLogs }, { data: latestLog }] = await Promise.all([
+      supabase.from("health_events").select("*").order("ts", { ascending: false }).limit(100),
+      supabase.from("group_stats").select("group_id, group_name"),
+      supabase.from("bots").select("group_id"),
+      supabase.from("ai_log").select("model, created_at")
+        .gt("created_at", sevenDaysAgo)
+        .not("model", "is", null)
+        .neq("model", primaryModel)
+        .order("created_at", { ascending: false })
+        .limit(500),
+      supabase.from("ai_log").select("model").order("created_at", { ascending: false }).limit(1),
+    ]);
+    const botGroupIds = new Set((allBots ?? []).map((b: any) => b.group_id));
+    const no_bot_groups = (allGroups ?? [])
+      .filter((g: any) => !botGroupIds.has(g.group_id))
+      .map((g: any) => ({ group_id: g.group_id, group_name: g.group_name }));
+    const fallbackMap: Record<string, { model: string; count: number; last_ts: string }> = {};
+    for (const r of fallbackLogs ?? []) {
+      if (!fallbackMap[r.model]) fallbackMap[r.model] = { model: r.model, count: 0, last_ts: r.created_at };
+      fallbackMap[r.model].count++;
+      if (r.created_at > fallbackMap[r.model].last_ts) fallbackMap[r.model].last_ts = r.created_at;
+    }
+    const model_fallbacks = Object.values(fallbackMap);
+    const current_model = latestLog?.[0]?.model ?? null;
+    return json({ events: events ?? [], no_bot_groups, model_fallbacks, current_model });
+  }
+
   if (req.method === "GET" && url.searchParams.get("list")) {
     // Fetch GroupMe group pages in parallel (was sequential -> slow).
     const pages = await Promise.all([1, 2, 3, 4, 5].map(async (page) => {
