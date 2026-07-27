@@ -10,6 +10,7 @@
 // archive tools + sk_conversations, with server-enforced guardrails so the
 // only path to a user-facing SMS is a fully validated reply_sms call.
 // POST ?key=SYNC_KEY  { phone, message, gmail_message_id, dry? }        -> AI path
+//                     { phone?, message, simulate:true }                -> simulate (no writes, returns real decision)
 //                     { op:'turn'|'log'|'ignorelist', ... }             -> utility ops
 
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -342,20 +343,23 @@ Deno.serve(async (req) => {
   if (body.op) return json({ error: `unknown op '${body.op}'` }, 400);
 
   // ---- AI path -----------------------------------------------------------
-  const phone = normalizeE164(body.phone);
+  const simulate = body.simulate === true;
+  const rawPhone = normalizeE164(body.phone);
+  const phone = simulate && !rawPhone ? "+10000000000" : rawPhone;
   const message = String(body.message ?? "").trim();
   const dry = body.dry === true;
   const gmailId = body.gmail_message_id ? String(body.gmail_message_id) : null;
-  if (!phone || !message) return json({ error: "valid phone and message required" }, 400);
-  if (!dry && !gmailId) return json({ error: "gmail_message_id required" }, 400);
+  if (!message) return json({ error: "message required" }, 400);
+  if (!simulate && !phone) return json({ error: "valid phone required" }, 400);
+  if (!simulate && !dry && !gmailId) return json({ error: "gmail_message_id required" }, 400);
 
   const toolsUsed: string[] = [];
   let usedModel = "";
   const nowIso = () => new Date().toISOString();
 
   try {
-    // 2. Claim (skipped in dry mode; a stale crashed claim never blocks a shadow run).
-    if (!dry) {
+    // 2. Claim (skipped in dry/simulate mode; a stale crashed claim never blocks a shadow run).
+    if (!dry && !simulate) {
       const { data: claimed, error: claimErr } = await supabase.from("sk_processed")
         .upsert({ gmail_message_id: gmailId, phone }, { onConflict: "gmail_message_id", ignoreDuplicates: true })
         .select();
@@ -383,6 +387,9 @@ Deno.serve(async (req) => {
     const { data: statusRow } = await supabase.from("sk_user_status")
       .select("status").eq("phone", phone).maybeSingle();
     if (statusRow && (statusRow.status === "ignore" || statusRow.status === "blocked")) {
+      if (simulate) {
+        return json({ action: "ignore", reason: "blocked-list", tools_used: [], model: "" });
+      }
       if (dry) {
         await supabase.from("sk_logs").insert({ phone, keyword: "shadow", status: "ignore", detail: { reason: "blocked-list" } });
       } else {
@@ -392,13 +399,13 @@ Deno.serve(async (req) => {
       }
       return json({ action: "ignore" });
     }
-    if (!statusRow) {
+    if (!statusRow && !simulate) {
       await supabase.from("sk_user_status")
         .upsert({ phone, status: "active" }, { onConflict: "phone", ignoreDuplicates: true });
     }
 
-    // 4. Save inbound turn (idempotent via unique inbound_id index).
-    {
+    // 4. Save inbound turn (idempotent via unique inbound_id index; skipped in simulate mode).
+    if (!simulate) {
       const { error: insErr } = await supabase.from("sk_conversations")
         .insert({ phone, role: "user", message, inbound_id: gmailId });
       if (insErr && insErr.code !== "23505") {
@@ -494,6 +501,9 @@ Deno.serve(async (req) => {
           args: { reason: `guardrail: ${guard}`, category, draft: parts.join(" ") || undefined },
         };
       } else {
+        if (simulate) {
+          return json({ action: "reply", parts, category, tools_used: toolsUsed, model: usedModel });
+        }
         if (!parts[parts.length - 1].includes(signOff)) parts[parts.length - 1] += " " + signOff;
         if (dry) {
           await supabase.from("sk_logs").insert({
@@ -520,6 +530,9 @@ Deno.serve(async (req) => {
       const escalation_text =
         `⚠️ SMS needs you — ${phone}${firstContact ? " (first contact)" : ""}\n` +
         `"${message.slice(0, 300)}"\nDavid: ${reason}` + (draft ? `\nDraft: ${draft}` : "");
+      if (simulate) {
+        return json({ action: "escalate", escalation_text, reason, category, tools_used: toolsUsed, model: usedModel });
+      }
       if (dry) {
         await supabase.from("sk_logs").insert({
           phone, keyword: "shadow", status: "escalate",
@@ -540,6 +553,9 @@ Deno.serve(async (req) => {
 
     // stay_silent
     const reason = String(terminal.args.reason ?? "unspecified").trim() || "unspecified";
+    if (simulate) {
+      return json({ action: "ignore", reason, tools_used: toolsUsed, model: usedModel });
+    }
     if (dry) {
       await supabase.from("sk_logs").insert({
         phone, keyword: "shadow", status: "ignore",
@@ -553,7 +569,7 @@ Deno.serve(async (req) => {
     return json({ action: "ignore", model: usedModel, tools_used: toolsUsed });
   } catch (e) {
     // Release an undecided claim so GAS's next tick can retry; nothing was sent.
-    if (!dry && gmailId) {
+    if (!dry && !simulate && gmailId) {
       try {
         await supabase.from("sk_processed").delete()
           .eq("gmail_message_id", gmailId).is("decision", null);

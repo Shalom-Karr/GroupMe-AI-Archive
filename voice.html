@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Members · SKChats Archive</title>
+<title>Voice Responder · SKChats</title>
 <link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,43 +29,26 @@
       #0f172a;
     background-attachment: fixed;
   }
-  body::after {
-    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 50; opacity: .035;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
   ::-webkit-scrollbar { width: 10px; }
   ::-webkit-scrollbar-track { background: #0f172a; }
   ::-webkit-scrollbar-thumb { background: #334155; border-radius: 5px; }
-  ::selection { background: rgba(251,191,36,.3); }
-  .mRow { transition: background .12s, transform .12s; cursor: pointer; }
-  .mRow:hover { background: rgba(51,65,85,.35); transform: translateX(2px); }
-  .mRow-grid { display: grid; grid-template-columns: 2.5rem 1fr; align-items: center; gap: .625rem; }
-  @media (min-width: 640px) {
-    .mRow-grid { grid-template-columns: 2.5rem 1fr 5rem 6.5rem 5.5rem 7rem; }
-    .mRow-grid .col-sm { display: block; }
-  }
-  .col-sm { display: none; }
-  .detail-table { width: 100%; font-size: 12px; color: #cbd5e1; border-collapse: collapse; }
-  .detail-table th { font-family: "Bricolage Grotesque", sans-serif; font-size: 10px; font-weight: 700; letter-spacing: .15em; color: #64748b; text-align: left; padding-bottom: .5rem; border-bottom: 1px solid #1e293b; white-space: nowrap; }
-  .detail-table td { padding: .4rem .5rem .4rem 0; border-bottom: 1px solid rgba(30,41,59,.6); vertical-align: top; }
-  .detail-table tr:last-child td { border-bottom: 0; }
 </style>
 </head>
 <body class="text-slate-200">
 
 <header class="border-b border-slate-800">
-  <div class="max-w-4xl xl:max-w-6xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-3">
-    <div class="min-w-0">
-      <h1 class="font-display font-bold text-2xl tracking-tight text-white leading-none">&#x1F465; Members Directory</h1>
-      <p id="headerStats" class="text-[11px] text-slate-500 mt-1 font-medium tracking-[.15em]">loading&hellip;</p>
+  <div class="max-w-3xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h1 class="font-display font-bold text-2xl tracking-tight text-white leading-none">Voice Responder</h1>
+      <p class="text-[11px] text-slate-500 mt-1 font-medium tracking-wide">David · SK RouteMe · Google Voice</p>
     </div>
-    <div class="flex flex-wrap items-center gap-2">
-      <a href="index.html" class="text-sm font-medium text-amber-300/90 border border-amber-400/40 rounded-full px-4 py-1.5 hover:bg-amber-400/10 transition">Dashboard</a>
-      <a href="leaderboard.html" class="text-sm font-medium text-amber-300/90 border border-amber-400/40 rounded-full px-4 py-1.5 hover:bg-amber-400/10 transition">Leaderboard</a>
-      <span class="text-sm font-semibold text-white border border-amber-400/60 bg-amber-400/10 rounded-full px-4 py-1.5">Members</span>
-      <a href="admin.html" class="text-sm font-medium text-amber-300/90 border border-amber-400/40 rounded-full px-4 py-1.5 hover:bg-amber-400/10 transition">Admin</a>
-      <a href="voice.html" class="text-sm font-medium text-amber-300/90 border border-amber-400/40 rounded-full px-4 py-1.5 hover:bg-amber-400/10 transition">Voice</a>
-      <button id="signOutBtn" onclick="signOut()" class="hidden text-sm font-medium text-slate-400 border border-slate-700 rounded-full px-4 py-1.5 hover:text-white transition">sign out</button>
+    <div class="flex flex-wrap gap-2">
+      <a href="index.html" class="text-sm font-medium text-amber-300/90 border border-amber-400/40 rounded-full px-4 py-1.5 hover:bg-amber-400/10">dashboard</a>
+      <a href="leaderboard.html" class="text-sm font-medium text-amber-300/90 border border-amber-400/40 rounded-full px-4 py-1.5 hover:bg-amber-400/10">leaderboard</a>
+      <a href="members.html" class="text-sm font-medium text-amber-300/90 border border-amber-400/40 rounded-full px-4 py-1.5 hover:bg-amber-400/10">members</a>
+      <a href="admin.html" class="text-sm font-medium text-amber-300/90 border border-amber-400/40 rounded-full px-4 py-1.5 hover:bg-amber-400/10">admin</a>
+      <span class="text-sm font-semibold bg-amber-400/20 text-amber-300 border border-amber-400/60 rounded-full px-4 py-1.5 cursor-default">voice</span>
+      <button id="signOutBtn" onclick="signOut()" class="hidden text-sm font-medium text-slate-400 border border-slate-700 rounded-full px-4 py-1.5 hover:text-white">sign out</button>
     </div>
   </div>
 </header>
@@ -73,93 +56,103 @@
 <!-- Login overlay -->
 <div id="loginOverlay" class="hidden fixed inset-0 z-[80] bg-[#0f172a] flex items-center justify-center px-4">
   <div class="w-full max-w-sm bg-[#1e293b] border border-slate-700 rounded-2xl p-6">
-    <div class="font-display text-xl font-bold text-white mb-1">&#x1F465; Members Directory</div>
-    <p class="text-[12px] text-slate-500 mb-4">Private &mdash; sign in to view.</p>
+    <div class="font-display text-xl font-bold text-white mb-1">Voice admin sign in</div>
+    <p class="text-[12px] text-slate-500 mb-4">This page manages the Google Voice responder — sign in with your admin account.</p>
     <input id="loginEmail" type="email" placeholder="email" autocomplete="username"
       class="w-full bg-[#0f172a] border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-400/60 mb-2">
     <input id="loginPass" type="password" placeholder="password" autocomplete="current-password"
       class="w-full bg-[#0f172a] border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-400/60 mb-3">
-    <button onclick="doSignIn()" class="w-full bg-amber-400 hover:bg-amber-300 text-[#0f172a] text-sm font-semibold py-2 rounded-xl">Sign in</button>
+    <button onclick="signIn()" id="loginBtn" class="w-full bg-amber-400 hover:bg-amber-300 text-[#0f172a] text-sm font-semibold py-2 rounded-xl">Sign in</button>
     <p id="loginErr" class="hidden text-[12px] text-rose-400 mt-2"></p>
   </div>
 </div>
 
-<main class="max-w-4xl xl:max-w-6xl mx-auto px-4 pb-24">
-
-  <!-- Loading -->
-  <div id="loadingState" class="mt-16 text-center text-slate-500 text-sm animate-pulse">Loading members&hellip;</div>
-
-  <!-- Error -->
-  <div id="errorState" class="hidden mt-16 text-center text-rose-400 text-sm"></div>
-
-  <!-- Content -->
-  <div id="content" class="hidden">
-
-    <!-- Search + controls -->
-    <div class="mt-6 bg-[#1e293b66] border border-slate-800 rounded-2xl p-4">
-      <div class="flex flex-wrap gap-3 items-center">
-        <input id="searchInput" type="search" placeholder="Search by name or user ID&hellip;"
-          autocomplete="off" spellcheck="false"
-          class="flex-1 min-w-[200px] bg-[#0f172a] border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-400/60"
-          oninput="applyFilter()">
-        <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer select-none">
-          <input type="checkbox" id="botToggle" onchange="applyFilter()"
-            style="accent-color:#fbbf24;width:1rem;height:1rem;">
-          Show bots
-        </label>
+<!-- Thread modal -->
+<div id="threadModal" class="hidden fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center px-4 pb-4">
+  <div class="w-full max-w-2xl bg-[#1e293b] border border-slate-700/80 rounded-2xl flex flex-col max-h-[92vh]">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-slate-700/60 flex-shrink-0">
+      <div>
+        <div id="threadPhone" class="font-mono font-bold text-white text-base leading-none"></div>
+        <div id="threadMeta" class="text-[11px] text-slate-500 mt-1"></div>
       </div>
-      <p class="mt-2 text-[11px] text-slate-600 leading-relaxed">Search by name or user ID. (GroupMe&rsquo;s API does not expose phone numbers, so phone search isn&rsquo;t available.)</p>
+      <button onclick="closeThread()" class="text-slate-500 hover:text-slate-300 text-2xl leading-none px-2 py-1 transition-colors">&#x2715;</button>
     </div>
-
-    <!-- Result count -->
-    <div id="resultCount" class="mt-3 text-[11px] text-slate-500 font-medium px-1"></div>
-
-    <!-- Directory list -->
-    <div class="mt-2 bg-[#1e293b66] border border-slate-800 rounded-2xl overflow-hidden">
-      <!-- Column header — sm+ only -->
-      <div class="hidden sm:block border-b border-slate-800">
-        <div class="mRow-grid px-4 py-2.5 text-[10px] font-bold tracking-[.15em] text-slate-500 font-display">
-          <div></div>
-          <div>MEMBER</div>
-          <div class="col-sm text-center">GROUPS</div>
-          <div class="col-sm text-right">MESSAGES</div>
-          <div class="col-sm text-right">LIKES</div>
-          <div class="col-sm text-right">ROLE</div>
-        </div>
-      </div>
-      <div id="directoryList"></div>
-    </div>
-
-  </div><!-- /content -->
-</main>
-
-<!-- Detail modal -->
-<div id="detailOverlay"
-  class="hidden fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm overflow-y-auto"
-  onclick="if(event.target===this)closeDetail()">
-  <div id="detailCard"
-    role="dialog" aria-modal="true" aria-labelledby="detailName"
-    class="max-w-2xl mx-auto mt-14 mb-10 bg-[#1e293b] border border-slate-700 rounded-2xl shadow-2xl p-6">
+    <div id="threadBody" class="flex-1 overflow-y-auto px-4 py-4 space-y-2"></div>
   </div>
 </div>
 
+<main class="max-w-3xl mx-auto px-4 pb-24">
+
+  <!-- 1. SIMULATE CARD -->
+  <div class="mt-8 bg-[#1e293b66] border border-slate-800 rounded-2xl p-5">
+    <div class="font-display text-sm font-bold tracking-[.15em] text-slate-400 mb-1">SIMULATE A MESSAGE</div>
+    <p class="text-[12px] text-slate-500 mb-3">Preview how David would respond to an incoming SMS. Nothing is sent or saved — dry run only.</p>
+    <textarea id="simMsg" rows="3" placeholder="Type a message as if a user texted it…"
+      class="w-full bg-[#0f172a] border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-400/60 mb-2"></textarea>
+    <div class="flex gap-2 mb-3">
+      <input id="simPhone" placeholder="+1… (optional — leave blank for a cold message)" autocomplete="off"
+        class="flex-1 min-w-0 bg-[#0f172a] border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-400/60">
+      <button id="simBtn" onclick="simulate()"
+        class="bg-amber-400 hover:bg-amber-300 text-[#0f172a] text-sm font-semibold px-4 py-2 rounded-xl whitespace-nowrap flex-shrink-0">See David's response</button>
+    </div>
+    <div id="simResult" class="hidden"></div>
+  </div>
+
+  <!-- 2. STATS ROW -->
+  <div class="mt-6 grid grid-cols-3 gap-4">
+    <div class="bg-[#1e293b66] border border-slate-800 rounded-2xl p-4 text-center">
+      <div id="statIgnore" class="font-display text-3xl font-bold text-slate-300 leading-none">—</div>
+      <div class="text-[11px] text-slate-500 mt-2 font-medium tracking-[.15em]">IGNORED</div>
+    </div>
+    <div class="bg-[#1e293b66] border border-slate-800 rounded-2xl p-4 text-center">
+      <div id="statActive" class="font-display text-3xl font-bold text-emerald-400 leading-none">—</div>
+      <div class="text-[11px] text-slate-500 mt-2 font-medium tracking-[.15em]">ACTIVE</div>
+    </div>
+    <div class="bg-[#1e293b66] border border-slate-800 rounded-2xl p-4 text-center">
+      <div id="statBlocked" class="font-display text-3xl font-bold text-rose-400 leading-none">—</div>
+      <div class="text-[11px] text-slate-500 mt-2 font-medium tracking-[.15em]">BLOCKED</div>
+    </div>
+  </div>
+
+  <!-- 3. IGNORE LIST CARD -->
+  <div class="mt-6 bg-[#1e293b66] border border-slate-800 rounded-2xl p-5">
+    <div class="flex items-center justify-between mb-3">
+      <div class="font-display text-sm font-bold tracking-[.15em] text-slate-400">
+        IGNORE LIST <span id="ignoreCount" class="font-normal text-slate-600 text-[11px]"></span>
+      </div>
+    </div>
+    <div id="ignoreList" class="text-sm text-slate-500 max-h-64 overflow-y-auto pr-1">loading…</div>
+  </div>
+
+  <!-- 4. SHADOW DECISIONS CARD -->
+  <div class="mt-6 bg-[#1e293b66] border border-amber-400/25 rounded-2xl p-5">
+    <div class="font-display text-sm font-bold tracking-[.15em] text-amber-300/90 mb-1">SHADOW DECISIONS</div>
+    <p class="text-[12px] text-slate-500 mb-3">What David <em>would have</em> done in the last 7 days — only populated once shadow mode is running.</p>
+    <div id="shadowSummary" class="text-sm text-slate-500">loading…</div>
+  </div>
+
+  <!-- 5. CONVERSATIONS CARD -->
+  <div class="mt-6 bg-[#1e293b66] border border-slate-800 rounded-2xl p-5">
+    <div class="flex items-center justify-between mb-3">
+      <div class="font-display text-sm font-bold tracking-[.15em] text-slate-400">CONVERSATIONS</div>
+      <button onclick="loadOverview()" class="text-[12px] font-semibold text-slate-400 border border-slate-700 rounded-full px-4 py-1.5 hover:text-white">&#x27F3; refresh</button>
+    </div>
+    <div id="threadsList" class="text-sm text-slate-500">loading…</div>
+  </div>
+
+  <!-- 6. LOGS CARD -->
+  <div class="mt-6 bg-[#1e293b66] border border-slate-800 rounded-2xl p-5">
+    <div class="font-display text-sm font-bold tracking-[.15em] text-slate-400 mb-3">RECENT LOGS</div>
+    <div class="overflow-x-auto">
+      <div id="logsTable" class="text-sm text-slate-500 min-w-0">loading…</div>
+    </div>
+  </div>
+
+</main>
+
 <script src="app.js"></script>
 <script>
-/* ── helpers not in app.js ─────────────────────────────────────────── */
-const NAME_HUES = [28, 350, 168, 262, 200, 90, 320, 12, 140, 230];
-const _colorCache = {};
-function nameColor(name) {
-  if (!_colorCache[name]) {
-    let h = 0;
-    for (const c of name || '?') h = (h * 31 + c.charCodeAt(0)) >>> 0;
-    _colorCache[name] = `hsl(${NAME_HUES[h % NAME_HUES.length]} 75% 68%)`;
-  }
-  return _colorCache[name];
-}
-
-function fmtD(ts) {
-  return ts ? new Date(ts * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: '2-digit' }) : '—';
-}
+function saveSession() { localStorage.setItem('sk_auth', JSON.stringify(session)); }
 
 async function ensureAuth() {
   loadSession();
@@ -172,8 +165,8 @@ async function ensureAuth() {
     });
     if (r.ok) {
       const d = await r.json();
-      session = { access_token: d.access_token, refresh_token: d.refresh_token, expires_at: Math.floor(Date.now() / 1000) + (d.expires_in ?? 3600), email: session.email };
-      localStorage.setItem('sk_auth', JSON.stringify(session));
+      session = { access_token: d.access_token, refresh_token: d.refresh_token, expires_at: Math.floor(Date.now() / 1000) + (d.expires_in ?? 3600) };
+      saveSession();
       return true;
     }
   }
@@ -182,422 +175,302 @@ async function ensureAuth() {
   return false;
 }
 
-async function sb(path) {
-  const r = await fetch(`${SUPA_URL}/rest/v1/${path}`, {
-    headers: { apikey: ANON, Authorization: `Bearer ${session?.access_token ?? ANON}` },
-  });
-  if (r.status === 401 || r.status === 403) { signOut(); throw new Error('session expired'); }
-  if (!r.ok) throw new Error(`${r.status}`);
-  return r.json();
-}
-
-async function doSignIn() {
+async function signIn() {
   const err = document.getElementById('loginErr');
   err.classList.add('hidden');
   const r = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=password`, {
     method: 'POST',
     headers: { apikey: ANON, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      email: document.getElementById('loginEmail').value.trim(),
-      password: document.getElementById('loginPass').value,
-    }),
+    body: JSON.stringify({ email: document.getElementById('loginEmail').value.trim(), password: document.getElementById('loginPass').value }),
   });
   const d = await r.json();
-  if (!r.ok) { err.textContent = d.error_description ?? d.msg ?? 'sign in failed'; err.classList.remove('hidden'); return; }
-  session = {
-    access_token: d.access_token,
-    refresh_token: d.refresh_token,
-    expires_at: Math.floor(Date.now() / 1000) + (d.expires_in ?? 3600),
-    email: document.getElementById('loginEmail').value.trim(),
-  };
-  localStorage.setItem('sk_auth', JSON.stringify(session));
+  if (!r.ok) {
+    err.textContent = d.error_description ?? d.msg ?? 'sign in failed';
+    err.classList.remove('hidden');
+    return;
+  }
+  session = { access_token: d.access_token, refresh_token: d.refresh_token, expires_at: Math.floor(Date.now() / 1000) + (d.expires_in ?? 3600) };
+  saveSession();
+  showVoice();
+}
+
+async function authHeaders() {
+  await ensureAuth();
+  return { 'Content-Type': 'application/json', apikey: ANON, Authorization: `Bearer ${session.access_token}` };
+}
+
+async function showVoice() {
   document.getElementById('loginOverlay').classList.add('hidden');
   document.getElementById('signOutBtn').classList.remove('hidden');
-  boot().catch(showErr);
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doSignIn(); });
-});
-
-/* ── state ─────────────────────────────────────────────────────────── */
-let personMap = {};
-let persons   = [];
-let groupNameMap = {};
-
-/* ── aggregation ────────────────────────────────────────────────────── */
-function addNamesToSet(nameSet, currentName, namesArr) {
-  if (currentName) {
-    if (!nameSet.has(currentName)) nameSet.set(currentName, null);
-  }
-  for (const n of namesArr || []) {
-    if (!n || !n.name) continue;
-    const existing = nameSet.get(n.name);
-    if (existing === undefined) {
-      nameSet.set(n.name, n.first_used || null);
-    } else if (n.first_used && (!existing || n.first_used < existing)) {
-      nameSet.set(n.name, n.first_used);
-    }
-  }
-}
-
-function buildPersons(rawMembers, groupStats) {
-  groupNameMap = {};
-  for (const g of groupStats) groupNameMap[g.group_id] = g.group_name;
-
-  personMap = {};
-
-  for (const m of rawMembers) {
-    const uid = m.user_id;
-    const msgs = +(m.msg_count || 0);
-    const likes = +(m.likes_received || 0);
-
-    if (!personMap[uid]) {
-      personMap[uid] = {
-        user_id:       uid,
-        is_bot:        !!m.is_bot,
-        total_msgs:    msgs,
-        total_likes:   likes,
-        earliest_first: m.first_ts || null,
-        latest_last:   m.last_ts   || null,
-        primary_name:  m.current_name || uid,
-        _primary_msgs: msgs,
-        nameSet:       new Map(),
-        groups:        [],
-      };
-    } else {
-      const p = personMap[uid];
-      p.is_bot       = p.is_bot || !!m.is_bot;
-      p.total_msgs  += msgs;
-      p.total_likes += likes;
-      if (m.first_ts != null && (p.earliest_first == null || m.first_ts < p.earliest_first)) p.earliest_first = m.first_ts;
-      if (m.last_ts  != null && (p.latest_last   == null || m.last_ts  > p.latest_last))    p.latest_last    = m.last_ts;
-      if (msgs > p._primary_msgs) { p.primary_name = m.current_name || uid; p._primary_msgs = msgs; }
-    }
-
-    addNamesToSet(personMap[uid].nameSet, m.current_name, m.names);
-
-    personMap[uid].groups.push({
-      group_id:      m.group_id,
-      group_name:    groupNameMap[m.group_id] || m.group_id,
-      role:          m.role || null,
-      member_no:     m.member_no,
-      msg_count:     msgs,
-      likes_received: likes,
-      first_ts:      m.first_ts || null,
-      last_ts:       m.last_ts  || null,
-    });
-  }
-
-  persons = Object.values(personMap);
-
-  for (const p of persons) {
-    p.nicknames = [...p.nameSet.entries()]
-      .sort((a, b) => {
-        if (!a[1] && !b[1]) return 0;
-        if (!a[1]) return 1;
-        if (!b[1]) return -1;
-        return a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : 0;
-      })
-      .map(([name, first_used]) => ({ name, first_used }));
-
-    p.searchTokens = [p.user_id.toLowerCase(), ...p.nicknames.map(n => n.name.toLowerCase())];
-
-    p.groups.sort((a, b) => b.msg_count - a.msg_count);
-
-    delete p.nameSet;
-    delete p._primary_msgs;
-  }
-
-  persons.sort((a, b) => b.total_msgs - a.total_msgs);
-}
-
-/* ── role helpers ───────────────────────────────────────────────────── */
-function topRole(groups) {
-  const roles = groups.map(g => g.role);
-  if (roles.includes('owner'))  return 'owner';
-  if (roles.includes('admin'))  return 'admin';
-  if (roles.some(r => r === 'member')) return 'member';
-  return null;
-}
-
-function roleBadge(role, is_bot) {
-  if (is_bot)            return '<span style="font-size:10px;font-weight:600;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:1px 5px">bot</span>';
-  if (role === 'owner')  return '<span style="font-size:10px;font-weight:600;color:#fcd34d;border:1px solid rgba(251,191,36,.4);background:rgba(251,191,36,.1);border-radius:4px;padding:1px 5px">owner</span>';
-  if (role === 'admin')  return '<span style="font-size:10px;font-weight:600;color:#a5b4fc;border:1px solid rgba(129,140,248,.25);background:rgba(129,140,248,.1);border-radius:4px;padding:1px 5px">admin</span>';
-  if (role === 'member') return '<span style="font-size:10px;font-weight:600;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:1px 5px">member</span>';
-  return '<span style="font-size:10px;font-weight:600;color:#f87171;border:1px solid rgba(251,113,133,.2);background:rgba(251,113,133,.1);border-radius:4px;padding:1px 5px">ex-member</span>';
-}
-
-function avatarCircle(name, size) {
-  const s = size || '2.25rem';
-  const initial = esc(((name || '?')[0] || '?').toUpperCase());
-  return `<div style="width:${s};height:${s};border-radius:9999px;display:flex;align-items:center;justify-content:center;background:${nameColor(name)};color:#0f172a;font-weight:700;font-family:'Bricolage Grotesque',sans-serif;flex-shrink:0">${initial}</div>`;
-}
-
-/* ── directory rendering ────────────────────────────────────────────── */
-function rowHtml(p) {
-  const role = topRole(p.groups);
-  const gc   = p.groups.length;
-  const uid  = esc(p.user_id);
-  const name = esc(p.primary_name || p.user_id);
-  return `<div class="mRow border-b border-slate-800/60 last:border-0" onclick="openDetail('${uid}')">
-    <div class="mRow-grid px-4 py-3">
-      ${avatarCircle(p.primary_name)}
-      <div class="min-w-0">
-        <div class="font-medium text-sm truncate" style="color:${nameColor(p.primary_name)}">${name}</div>
-        <div class="text-[11px] text-slate-500 font-mono truncate">${uid}</div>
-      </div>
-      <div class="col-sm text-center text-[12px] text-slate-400">${gc}&thinsp;grp${gc !== 1 ? 's' : ''}</div>
-      <div class="col-sm text-right text-[12px] text-slate-300">${p.total_msgs.toLocaleString()}</div>
-      <div class="col-sm text-right text-[12px] text-slate-400">&hearts;&thinsp;${p.total_likes.toLocaleString()}</div>
-      <div class="col-sm text-right">${roleBadge(role, p.is_bot)}</div>
-    </div>
-  </div>`;
-}
-
-function renderDirectory(filtered) {
-  const showBots  = document.getElementById('botToggle').checked;
-  const denom     = persons.filter(p => showBots || !p.is_bot).length;
-  const cap       = 300;
-  const total     = filtered.length;
-  const toShow    = filtered.slice(0, cap);
-
-  document.getElementById('resultCount').textContent =
-    `${total.toLocaleString()} of ${denom.toLocaleString()} member${denom !== 1 ? 's' : ''}`;
-
-  const list = document.getElementById('directoryList');
-
-  if (!toShow.length) {
-    list.innerHTML = '<div style="padding:2.5rem 1rem;text-align:center;color:#475569;font-size:.875rem">No members match your search.</div>';
-    return;
-  }
-
-  const overflow = total > cap
-    ? `<div style="padding:.75rem 1rem;text-align:center;font-size:11px;color:#475569;border-top:1px solid rgba(30,41,59,.6)">&hellip;and ${(total - cap).toLocaleString()} more &mdash; refine your search to narrow results</div>`
-    : '';
-
-  list.innerHTML = toShow.map(rowHtml).join('') + overflow;
-}
-
-function applyFilter() {
-  const q        = document.getElementById('searchInput').value.trim().toLowerCase();
-  const showBots = document.getElementById('botToggle').checked;
-
-  const filtered = persons.filter(p => {
-    if (!showBots && p.is_bot) return false;
-    if (!q) return true;
-    return p.searchTokens.some(t => t.includes(q));
-  });
-
-  renderDirectory(filtered);
-}
-
-/* ── boot ───────────────────────────────────────────────────────────── */
-function showErr(e) {
-  document.getElementById('loadingState').classList.add('hidden');
-  const el = document.getElementById('errorState');
-  el.textContent = 'Failed to load: ' + (e.message || e);
-  el.classList.remove('hidden');
-}
-
-async function boot() {
-  document.getElementById('loadingState').classList.remove('hidden');
-  document.getElementById('content').classList.add('hidden');
-  document.getElementById('errorState').classList.add('hidden');
-
   try {
-    const [rawMembers, groupStats] = await Promise.all([
-      sbAll('members?select=group_id,user_id,member_no,current_name,role,is_bot,msg_count,likes_received,first_ts,last_ts,names&order=msg_count.desc'),
-      sb('group_stats?select=group_id,group_name'),
-    ]);
-
-    buildPersons(rawMembers, groupStats);
-
-    document.getElementById('loadingState').classList.add('hidden');
-    document.getElementById('content').classList.remove('hidden');
-
-    const total = persons.length;
-    const bots  = persons.filter(p => p.is_bot).length;
-    document.getElementById('headerStats').textContent =
-      `${total.toLocaleString()} unique member${total !== 1 ? 's' : ''} across all groups` +
-      (bots ? ` (${bots} bot${bots !== 1 ? 's' : ''})` : '');
-
-    applyFilter();
-  } catch (e) {
-    showErr(e);
-  }
-}
-
-/* ── detail modal ───────────────────────────────────────────────────── */
-function fmtEventLine(ev) {
-  const grpName = groupNameMap[ev.group_id] || ev.group_id || '';
-  const g = grpName ? '<span style="color:#e2e8f0">' + esc(grpName) + '</span>' : 'the group';
-  const tag = grpName ? ' <span style="color:#64748b">· ' + esc(grpName) + '</span>' : '';
-  switch (ev.type) {
-    case 'added':
-      return 'Added to ' + g + (ev.actor_name ? ' by <span style="color:#cbd5e1">' + esc(ev.actor_name) + '</span>' : '');
-    case 'removed':
-      return '<span style="color:rgba(253,164,175,.9)">Removed from</span> ' + g + (ev.actor_name ? ' by <span style="color:#f87171">' + esc(ev.actor_name) + '</span>' : '');
-    case 'left':
-      return '<span style="color:rgba(253,164,175,.8)">Left</span> ' + g;
-    case 'rejoined':
-      return '<span style="color:rgba(110,231,183,.9)">Rejoined</span> ' + g;
-    case 'renamed':
-      return 'Renamed to <span style="color:#fcd34d">' + esc(ev.subject_name) + '</span>' +
-        (ev.detail ? ' <span style="color:#475569">(was ' + esc(ev.detail) + ')</span>' : '') + tag;
-    default:
-      return esc(ev.type) + (ev.detail ? ': ' + esc(ev.detail) : '') + tag;
-  }
-}
-
-let _lastDetailUid = null;
-
-async function openDetail(uid) {
-  const p = personMap[uid];
-  if (!p) return;
-  _lastDetailUid = uid;
-
-  const overlay = document.getElementById('detailOverlay');
-  const card    = document.getElementById('detailCard');
-  overlay.classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
-
-  const role = topRole(p.groups);
-
-  const nicknamesHtml = p.nicknames.length
-    ? `<div class="mb-5">
-        <div class="text-[10px] font-bold tracking-[.15em] text-slate-500 font-display mb-2">NAMES USED</div>
-        <div class="flex flex-wrap gap-1.5">
-          ${p.nicknames.map(n =>
-            `<span style="font-size:11px;background:rgba(30,41,59,.5);border:1px solid #334155;border-radius:4px;padding:2px 7px;color:#cbd5e1">${esc(n.name)}${n.first_used ? '<span style="color:#475569;margin-left:4px">' + esc(String(n.first_used).slice(0, 10)) + '</span>' : ''}</span>`
-          ).join('')}
-        </div>
-      </div>`
-    : '';
-
-  const groupsTableHtml = `
-    <div class="mb-5">
-      <div class="text-[10px] font-bold tracking-[.15em] text-slate-500 font-display mb-2">GROUP BREAKDOWN</div>
-      <div class="overflow-x-auto">
-        <table class="detail-table">
-          <thead><tr>
-            <th>GROUP</th>
-            <th style="text-align:center">ROLE</th>
-            <th style="text-align:center">MEMBER #</th>
-            <th style="text-align:right">MSGS</th>
-            <th style="text-align:right">LIKES</th>
-            <th style="text-align:right">LAST ACTIVE</th>
-          </tr></thead>
-          <tbody>
-            ${p.groups.map(g => `<tr>
-              <td style="padding-right:.75rem;color:#e2e8f0;white-space:nowrap">${esc(g.group_name)}</td>
-              <td style="text-align:center;white-space:nowrap">${roleBadge(g.role, false)}</td>
-              <td style="text-align:center;color:#64748b">${g.member_no != null ? esc(String(g.member_no)) : '&mdash;'}</td>
-              <td style="text-align:right;color:#cbd5e1">${g.msg_count.toLocaleString()}</td>
-              <td style="text-align:right;color:#94a3b8">&hearts;&thinsp;${g.likes_received.toLocaleString()}</td>
-              <td style="text-align:right;color:#64748b;white-space:nowrap">${fmtD(g.last_ts)}</td>
-            </tr>`).join('')}
-          </tbody>
-        </table>
-      </div>
-    </div>`;
-
-  card.innerHTML = `
-    <div class="flex items-start justify-between gap-3 mb-5">
-      <div class="flex items-center gap-3 min-w-0">
-        ${avatarCircle(p.primary_name, '3.5rem')}
-        <div class="min-w-0">
-          <div id="detailName" class="font-display font-bold text-xl leading-none" style="color:${nameColor(p.primary_name)}">${esc(p.primary_name || p.user_id)}</div>
-          <div class="font-mono text-[12px] text-slate-500 mt-1 truncate">${esc(p.user_id)}</div>
-          <div class="mt-1">${roleBadge(role, p.is_bot)}</div>
-        </div>
-      </div>
-      <button onclick="closeDetail()" aria-label="Close"
-        style="color:#64748b;font-size:1.25rem;line-height:1;padding:.25rem;cursor:pointer;flex-shrink:0;background:none;border:none"
-        onmouseover="this.style.color='#f8fafc'" onmouseout="this.style.color='#64748b'">&#x2715;</button>
-    </div>
-
-    <div class="grid grid-cols-2 gap-3 mb-5">
-      <div class="bg-slate-800/40 rounded-xl px-4 py-3">
-        <div class="text-[10px] font-bold tracking-[.15em] text-slate-500 font-display mb-1">MESSAGES</div>
-        <div class="font-display font-bold text-2xl text-white">${p.total_msgs.toLocaleString()}</div>
-      </div>
-      <div class="bg-slate-800/40 rounded-xl px-4 py-3">
-        <div class="text-[10px] font-bold tracking-[.15em] text-slate-500 font-display mb-1">LIKES RECEIVED</div>
-        <div class="font-display font-bold text-2xl text-white">&hearts; ${p.total_likes.toLocaleString()}</div>
-      </div>
-    </div>
-
-    <div class="flex flex-wrap gap-4 mb-5 text-[12px]">
-      <div><span class="text-slate-500">First seen:</span> <span class="text-slate-300">${fmtD(p.earliest_first)}</span></div>
-      <div><span class="text-slate-500">Last active:</span> <span class="text-slate-300">${fmtD(p.latest_last)}</span></div>
-      <div><span class="text-slate-500">Groups:</span> <span class="text-slate-300">${p.groups.length}</span></div>
-    </div>
-
-    ${nicknamesHtml}
-    ${groupsTableHtml}
-
-    <div>
-      <div class="text-[10px] font-bold tracking-[.15em] text-slate-500 font-display mb-2">TIMELINE</div>
-      <div id="eventsContainer" class="text-[12px] text-slate-500 italic">Loading history&hellip;</div>
-    </div>
-  `;
-
-  /* focus close button for keyboard users */
-  card.querySelector('button[aria-label="Close"]').focus();
-
-  /* fetch events */
-  try {
-    const events = await sb(
-      'events?subject_uid=eq.' + encodeURIComponent(uid) +
-      '&select=ts,type,group_id,subject_name,actor_name,detail&order=ts.asc&limit=200'
-    );
-    if (_lastDetailUid !== uid) return; /* user navigated away */
-    const ec = document.getElementById('eventsContainer');
-    if (!ec) return;
-    if (!events.length) {
-      ec.innerHTML = '<span style="color:#334155">No events recorded.</span>';
+    const r = await fetch(`${SUPA_URL}/functions/v1/add-group?sk=overview`, { headers: await authHeaders() });
+    const d = await r.json();
+    if (r.status === 401 || r.status === 403 || (d.who && d.who.admin === false)) {
+      document.getElementById('loginOverlay').innerHTML =
+        `<div class="w-full max-w-sm bg-[#1e293b] border border-slate-700 rounded-2xl p-6 text-center">
+          <div class="font-display text-lg font-bold text-white mb-1">Not authorized</div>
+          <p class="text-[13px] text-slate-400 mb-4">${d.who?.email ? esc(d.who.email) + ' is' : 'You are'} signed in but not an admin. Ask an existing admin to add you.</p>
+          <button onclick="signOut()" class="bg-[#0f172a] border border-slate-700 text-slate-300 text-sm rounded-xl px-4 py-2 hover:border-slate-500">sign out</button>
+        </div>`;
+      document.getElementById('loginOverlay').classList.remove('hidden');
       return;
     }
-    ec.classList.remove('italic');
-    ec.innerHTML = '<ul class="space-y-1">' +
-      events.map(ev =>
-        `<li style="display:flex;gap:.5rem;align-items:baseline">
-          <span style="color:#334155;font-family:monospace;font-size:11px;white-space:nowrap;flex-shrink:0">${fmtD(ev.ts)}</span>
-          <span style="color:#94a3b8">${fmtEventLine(ev)}</span>
-        </li>`
-      ).join('') +
-      '</ul>';
+    renderOverview(d);
   } catch (e) {
-    const ec = document.getElementById('eventsContainer');
-    if (ec) ec.innerHTML = '<span style="color:#f87171">Failed to load events: ' + esc(e.message) + '</span>';
+    document.getElementById('threadsList').textContent = 'failed to load overview: ' + e.message;
+    document.getElementById('ignoreList').textContent = 'failed to load';
+    document.getElementById('shadowSummary').textContent = 'failed to load';
+    document.getElementById('logsTable').textContent = 'failed to load';
   }
 }
 
-function closeDetail() {
-  _lastDetailUid = null;
-  document.getElementById('detailOverlay').classList.add('hidden');
-  document.body.style.overflow = '';
+async function loadOverview() {
+  try {
+    const r = await fetch(`${SUPA_URL}/functions/v1/add-group?sk=overview`, { headers: await authHeaders() });
+    const d = await r.json();
+    if (!r.ok || d.error) throw new Error(d.error ?? r.status);
+    renderOverview(d);
+  } catch (e) {
+    document.getElementById('threadsList').textContent = 'could not refresh: ' + e.message;
+  }
 }
 
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    const overlay = document.getElementById('detailOverlay');
-    if (overlay && !overlay.classList.contains('hidden')) closeDetail();
-  }
-});
+function renderOverview(d) {
+  document.getElementById('statIgnore').textContent = d.ignore_count ?? '—';
+  document.getElementById('statActive').textContent = d.active_count ?? '—';
+  document.getElementById('statBlocked').textContent = d.blocked_count ?? '—';
+  renderIgnoreList(d.ignore_list ?? []);
+  renderShadow(d.shadow_summary ?? []);
+  renderThreads(d.threads ?? []);
+  renderLogs(d.logs ?? []);
+}
 
-/* ── init ───────────────────────────────────────────────────────────── */
-(async () => {
-  const authed = await ensureAuth();
-  if (!authed) {
-    document.getElementById('loginOverlay').classList.remove('hidden');
-    document.getElementById('loadingState').classList.add('hidden');
+function renderIgnoreList(list) {
+  const box = document.getElementById('ignoreList');
+  const cnt = document.getElementById('ignoreCount');
+  cnt.textContent = list.length ? `(${list.length})` : '';
+  if (!list.length) { box.textContent = 'no numbers on the ignore list'; return; }
+  box.innerHTML = list.map(item => {
+    const when = item.updated_at ? new Date(item.updated_at).toLocaleDateString() : '';
+    return `<div class="flex items-start gap-3 py-2 border-b border-slate-800/60 last:border-0">
+      <span class="font-mono text-[12px] text-slate-300 flex-shrink-0">${esc(item.phone)}</span>
+      <span class="min-w-0 flex-1 text-[12px] text-slate-500 break-words">${esc(item.notes ?? '')}</span>
+      <span class="text-[10px] text-slate-600 flex-shrink-0">${esc(when)}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderShadow(summary) {
+  const box = document.getElementById('shadowSummary');
+  if (!summary.length) {
+    box.innerHTML = '<span class="text-slate-600">no shadow data yet — run shadow mode to populate</span>';
     return;
   }
-  document.getElementById('signOutBtn').classList.remove('hidden');
-  await boot();
+  box.innerHTML = `<div class="flex flex-wrap gap-3">` + summary.map(s => {
+    const cls = s.status === 'reply'
+      ? 'text-emerald-300 border-emerald-400/40 bg-emerald-400/10'
+      : s.status === 'escalate'
+      ? 'text-amber-300 border-amber-400/40 bg-amber-400/10'
+      : 'text-slate-400 border-slate-700 bg-slate-800/40';
+    return `<div class="flex items-center gap-2 px-4 py-2.5 rounded-xl border ${cls}">
+      <span class="text-[12px] font-semibold capitalize">${esc(s.status)}</span>
+      <span class="font-display text-xl font-bold">${esc(String(s.count))}</span>
+    </div>`;
+  }).join('') + `</div>`;
+}
+
+function renderThreads(threads) {
+  const box = document.getElementById('threadsList');
+  if (!threads.length) { box.textContent = 'no conversations yet'; return; }
+  box.innerHTML = threads.map(t => {
+    const when = t.last_ts ? new Date(t.last_ts).toLocaleDateString() : '';
+    const roleColor = t.last_role === 'model' ? 'text-emerald-300' : t.last_role === 'user' ? 'text-amber-300' : 'text-slate-500';
+    return `<button onclick="openThread('${esc(t.phone)}')"
+      class="w-full text-left flex items-start gap-3 py-2.5 px-2 border-b border-slate-800/60 last:border-0 hover:bg-slate-800/30 rounded-lg transition-colors">
+      <div class="min-w-0 flex-1">
+        <div class="flex items-baseline gap-2 mb-0.5">
+          <span class="font-mono text-[12px] font-semibold text-slate-200">${esc(t.phone)}</span>
+          <span class="text-[10px] text-slate-600">${esc(when)}</span>
+        </div>
+        <div class="text-[12px] ${roleColor} truncate">${esc(t.last_message ?? '')}</div>
+      </div>
+      <span class="text-[10px] text-slate-600 flex-shrink-0 mt-1">${esc(String(t.turns ?? 0))} turns</span>
+    </button>`;
+  }).join('');
+}
+
+function renderLogs(logs) {
+  const box = document.getElementById('logsTable');
+  if (!logs.length) { box.textContent = 'no logs yet'; return; }
+  box.innerHTML = `<table class="w-full text-[12px]" style="border-collapse:collapse">
+    <thead>
+      <tr class="border-b border-slate-700/60">
+        <th class="text-left py-2 pr-4 text-[10px] font-bold tracking-[.15em] text-slate-500 whitespace-nowrap">TIME</th>
+        <th class="text-left py-2 pr-4 text-[10px] font-bold tracking-[.15em] text-slate-500 whitespace-nowrap">PHONE</th>
+        <th class="text-left py-2 pr-4 text-[10px] font-bold tracking-[.15em] text-slate-500">KEYWORD</th>
+        <th class="text-left py-2 pr-4 text-[10px] font-bold tracking-[.15em] text-slate-500">STATUS</th>
+        <th class="text-left py-2 text-[10px] font-bold tracking-[.15em] text-slate-500">DETAIL</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${logs.map(l => {
+        const when = l.created_at ? new Date(l.created_at).toLocaleString() : '';
+        const sc = l.status === 'reply' ? 'text-emerald-400'
+          : l.status === 'escalate' ? 'text-amber-300'
+          : 'text-slate-500';
+        return `<tr class="border-b border-slate-800/40 last:border-0 hover:bg-slate-800/30">
+          <td class="py-2 pr-4 text-slate-600 whitespace-nowrap">${esc(when)}</td>
+          <td class="py-2 pr-4 font-mono text-slate-400 whitespace-nowrap">${esc(l.phone ?? '')}</td>
+          <td class="py-2 pr-4 text-slate-400">${esc(l.keyword ?? '')}</td>
+          <td class="py-2 pr-4 font-semibold capitalize ${sc}">${esc(l.status ?? '')}</td>
+          <td class="py-2 text-slate-500 max-w-[180px] truncate">${esc(l.detail ?? '')}</td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table>`;
+}
+
+async function simulate() {
+  const msg = document.getElementById('simMsg').value.trim();
+  if (!msg) return;
+  const rawPhone = document.getElementById('simPhone').value.trim();
+  const btn = document.getElementById('simBtn');
+  const result = document.getElementById('simResult');
+  btn.disabled = true;
+  btn.textContent = 'Asking David…';
+  result.classList.remove('hidden');
+  result.innerHTML = `<div class="flex items-center gap-2 text-[12px] text-slate-500 animate-pulse py-2">&#x231B; David is thinking…</div>`;
+  try {
+    const payload = { sk: 'simulate', message: msg };
+    if (rawPhone) payload.phone = rawPhone;
+    const r = await fetch(`${SUPA_URL}/functions/v1/add-group`, {
+      method: 'POST',
+      headers: await authHeaders(),
+      body: JSON.stringify(payload),
+    });
+    const d = await r.json();
+    if (!r.ok || d.error) throw new Error(d.error ?? String(r.status));
+    renderSimResult(d);
+  } catch (e) {
+    result.innerHTML = `<div class="text-[12px] text-rose-400 bg-rose-400/10 border border-rose-400/20 rounded-xl px-3 py-2">Error: ${esc(e.message)}</div>`;
+  }
+  btn.disabled = false;
+  btn.textContent = "See David's response";
+}
+
+function renderSimResult(d) {
+  const box = document.getElementById('simResult');
+  const action = (d.action ?? '').toLowerCase();
+  const badgeCls = action === 'reply'
+    ? 'bg-emerald-400/15 text-emerald-300 border border-emerald-400/40'
+    : action === 'escalate'
+    ? 'bg-amber-400/15 text-amber-300 border border-amber-400/40'
+    : 'bg-slate-800/50 text-slate-400 border border-slate-700';
+
+  let html = `<div class="space-y-3 pt-1">`;
+
+  html += `<div class="flex items-center gap-2">
+    <span class="inline-block px-3 py-1 rounded-full text-[12px] font-semibold uppercase tracking-wide ${badgeCls}">${esc(action || 'unknown')}</span>
+    <span class="text-[11px] text-slate-500">David's decision</span>
+  </div>`;
+
+  if (action === 'reply') {
+    const parts = Array.isArray(d.parts) ? d.parts : [];
+    if (parts.length) {
+      html += `<div class="space-y-1.5">`;
+      parts.forEach(part => {
+        html += `<div class="flex justify-end">
+          <div class="max-w-[85%] bg-emerald-400/15 border border-emerald-400/40 text-emerald-100 text-[13px] rounded-2xl rounded-br-sm px-4 py-2.5 whitespace-pre-wrap break-words">${esc(part)}</div>
+        </div>`;
+      });
+      html += `</div>`;
+    } else {
+      html += `<div class="text-[13px] text-slate-500 italic">David would reply (no parts returned).</div>`;
+    }
+  } else if (action === 'escalate') {
+    const flagText = d.escalation_text ?? d.reason ?? '';
+    html += `<div class="bg-amber-400/10 border border-amber-400/30 rounded-xl px-4 py-3 space-y-1.5">
+      <div class="text-[10px] font-bold tracking-[.15em] text-amber-300/80">WOULD BE FLAGGED TO YOU</div>
+      <div class="text-[13px] text-amber-100 whitespace-pre-wrap break-words">${esc(flagText)}</div>
+      ${d.reason && d.escalation_text ? `<div class="text-[11px] text-amber-300/60">Reason: ${esc(d.reason)}</div>` : ''}
+    </div>`;
+  } else if (action === 'ignore') {
+    html += `<div class="text-[13px] text-slate-500 italic px-1">David would stay silent.</div>`;
+  }
+
+  const meta = [];
+  if (d.category) meta.push(`Category: ${esc(d.category)}`);
+  if (d.model) meta.push(`Model: ${esc(d.model)}`);
+  if (Array.isArray(d.tools_used) && d.tools_used.length) meta.push(`Tools: ${d.tools_used.map(t => esc(t)).join(', ')}`);
+  if (meta.length) {
+    html += `<div class="text-[10px] text-slate-600 border-t border-slate-800 pt-2">${meta.join(' · ')}</div>`;
+  }
+
+  html += `<div class="text-[10px] text-slate-700 italic">Preview only — nothing was sent or saved.</div>`;
+  html += `</div>`;
+  box.innerHTML = html;
+}
+
+async function openThread(phone) {
+  const modal = document.getElementById('threadModal');
+  const body = document.getElementById('threadBody');
+  document.getElementById('threadPhone').textContent = phone;
+  document.getElementById('threadMeta').textContent = 'loading…';
+  body.innerHTML = `<div class="text-[12px] text-slate-600 animate-pulse text-center py-6">loading conversation…</div>`;
+  modal.classList.remove('hidden');
+  try {
+    const r = await fetch(`${SUPA_URL}/functions/v1/add-group?sk=thread&phone=${encodeURIComponent(phone)}`, { headers: await authHeaders() });
+    const d = await r.json();
+    if (!r.ok || d.error) throw new Error(d.error ?? String(r.status));
+    const turns = d.turns ?? [];
+    document.getElementById('threadMeta').textContent = `${d.status ?? ''} · ${turns.length} turn${turns.length === 1 ? '' : 's'}`;
+    renderThread(turns);
+  } catch (e) {
+    body.innerHTML = `<div class="text-[12px] text-rose-400 text-center py-4">Failed to load: ${esc(e.message)}</div>`;
+    document.getElementById('threadMeta').textContent = 'error';
+  }
+}
+
+function renderThread(turns) {
+  const body = document.getElementById('threadBody');
+  if (!turns.length) {
+    body.innerHTML = '<div class="text-[12px] text-slate-600 text-center py-6">no messages in this thread</div>';
+    return;
+  }
+  body.innerHTML = turns.map(t => {
+    const role = t.role ?? 'user';
+    const when = t.created_at ? new Date(t.created_at).toLocaleString() : '';
+    if (role === 'system') {
+      return `<div class="text-center py-1">
+        <span class="text-[10px] text-slate-600 italic">${esc(t.message ?? '')}</span>
+      </div>`;
+    }
+    const isModel = role === 'model';
+    const align = isModel ? 'items-start' : 'items-end';
+    const bubbleCls = isModel
+      ? 'bg-slate-700/60 text-slate-200 rounded-2xl rounded-bl-sm'
+      : 'bg-amber-400/15 border border-amber-400/30 text-amber-100 rounded-2xl rounded-br-sm';
+    const labelCls = isModel ? 'text-emerald-400' : 'text-amber-300';
+    const label = isModel ? 'David' : 'User';
+    return `<div class="flex flex-col ${align}">
+      <div class="text-[9px] font-bold mb-0.5 px-1 ${labelCls}">${label}</div>
+      <div class="max-w-[85%] text-[13px] px-4 py-2.5 whitespace-pre-wrap break-words ${bubbleCls}">${esc(t.message ?? '')}</div>
+      <div class="text-[9px] text-slate-600 mt-0.5 px-1">${esc(when)}</div>
+    </div>`;
+  }).join('');
+  body.scrollTop = body.scrollHeight;
+}
+
+function closeThread() {
+  document.getElementById('threadModal').classList.add('hidden');
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeThread(); });
+document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') signIn(); });
+
+(async () => {
+  if (await ensureAuth()) showVoice();
+  else document.getElementById('loginOverlay').classList.remove('hidden');
 })();
 </script>
 </body>

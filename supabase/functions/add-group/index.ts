@@ -156,7 +156,104 @@ Deno.serve(async (req) => {
     return json({ groups, blocked: blockedRows ?? [], archived: have.size });
   }
 
+  if (req.method === "GET" && url.searchParams.get("sk") === "overview") {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const [
+      { data: statusCounts },
+      { data: ignoreList },
+      { data: recentConvs },
+      { data: skLogs },
+      { data: shadowLogs },
+      { data: canonRow },
+    ] = await Promise.all([
+      supabase.from("sk_user_status").select("status"),
+      supabase.from("sk_user_status")
+        .select("phone, notes, updated_at")
+        .eq("status", "ignore")
+        .order("updated_at", { ascending: false })
+        .limit(500),
+      supabase.from("sk_conversations")
+        .select("phone, role, message, created_at")
+        .order("created_at", { ascending: false })
+        .limit(600),
+      supabase.from("sk_logs")
+        .select("created_at, phone, keyword, status, detail")
+        .order("created_at", { ascending: false })
+        .limit(100),
+      supabase.from("sk_logs")
+        .select("status")
+        .eq("keyword", "shadow")
+        .gt("created_at", sevenDaysAgo),
+      supabase.from("sk_config")
+        .select("value")
+        .eq("key", "canon")
+        .maybeSingle(),
+    ]);
+    const counts: Record<string, number> = { ignore: 0, active: 0, blocked: 0 };
+    for (const r of statusCounts ?? []) {
+      if (r.status in counts) counts[r.status]++;
+    }
+    // Build threads from recent convs (already newest-first; first encounter per phone = latest turn).
+    const phoneMap = new Map<string, { last_message: string; last_role: string; last_ts: string; turns: number }>();
+    for (const r of recentConvs ?? []) {
+      const e = phoneMap.get(r.phone);
+      if (!e) {
+        phoneMap.set(r.phone, { last_message: r.message, last_role: r.role, last_ts: r.created_at, turns: 1 });
+      } else {
+        e.turns++;
+      }
+    }
+    const threads = [...phoneMap.entries()]
+      .sort((a, b) => b[1].last_ts.localeCompare(a[1].last_ts))
+      .slice(0, 60)
+      .map(([ph, v]) => ({ phone: ph, ...v }));
+    const shadowMap: Record<string, number> = {};
+    for (const r of shadowLogs ?? []) shadowMap[r.status] = (shadowMap[r.status] ?? 0) + 1;
+    const shadow_summary = Object.entries(shadowMap).map(([s, c]) => ({ status: s, count: c }));
+    return json({
+      ignore_count: counts.ignore,
+      active_count: counts.active,
+      blocked_count: counts.blocked,
+      ignore_list: ignoreList ?? [],
+      threads,
+      logs: skLogs ?? [],
+      shadow_summary,
+      canon: canonRow?.value ?? null,
+    });
+  }
+
+  if (req.method === "GET" && url.searchParams.get("sk") === "thread") {
+    const ph = url.searchParams.get("phone") ?? "";
+    if (!ph) return json({ error: "phone required" }, 400);
+    const [{ data: turns }, { data: statusRow }] = await Promise.all([
+      supabase.from("sk_conversations")
+        .select("role, message, created_at")
+        .eq("phone", ph)
+        .order("created_at", { ascending: true })
+        .limit(300),
+      supabase.from("sk_user_status")
+        .select("status, notes, updated_at")
+        .eq("phone", ph)
+        .maybeSingle(),
+    ]);
+    return json({ phone: ph, status: statusRow ?? null, turns: turns ?? [] });
+  }
+
   const body = await req.json().catch(() => ({}));
+
+  if (req.method === "POST" && body.sk === "simulate") {
+    const simMessage = String(body.message ?? "").trim();
+    if (!simMessage) return json({ error: "message required" }, 400);
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const syncKey = Deno.env.get("SYNC_KEY")!;
+    const simResp = await fetch(`${supabaseUrl}/functions/v1/voice-reply?key=${syncKey}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone: body.phone, message: simMessage, simulate: true }),
+    });
+    const simData = await simResp.json();
+    return json(simData, simResp.status);
+  }
 
   if (body.action === "block" || body.action === "unblock") {
     const bgid = String(body.group_id ?? "").trim();
